@@ -128,7 +128,7 @@ def fetchUrls(se,wd,pg):
 
 def scanSubDomains(se,wd,pg):
     if 'baidu' in se:
-        wd="site:"+wd
+        wd="inurl:"+wd
         wd=wd.strip()
         for x in xrange(1,pg):
             rn=10
