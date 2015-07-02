@@ -84,6 +84,35 @@ def getLinksFromBaidu(html):
                 except Exception:
                     pass
 
+def getDomainsFromBaidu(html):  
+    soup = BeautifulSoup(html)
+    html=soup.find('div', id="content_left")
+    if html is None:
+        print '[!] failed to crawl'
+    else:
+        html_doc=html.find_all('h3',class_="t")
+        if html_doc is None:
+            print '[!] failed to crawl'
+        else:
+            now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+            for doc in html_doc:
+                try:
+                    href=doc.find('a')
+                    link=href.get('href')
+                    rurl=urllib2.urlopen(link.strip()).geturl()
+                    url = rurl.strip()
+                    reg='http:\/\/[^\/]+'
+                    match_url = re.search(reg,url)
+                    if match_url:
+                        site=match_url.group(0)
+                    if not isExisted(site,'subdomains.txt'):
+                        logfile(site,'subdomains.txt')
+                        print "[+] "+site
+                    else:
+                        print "[!] url is duplicate ["+site+"]"
+                except Exception:
+                    pass
+
 def fetchUrls(se,wd,pg):
     if 'baidu' in se:
         for x in xrange(1,pg):
@@ -94,8 +123,22 @@ def fetchUrls(se,wd,pg):
             urls=getLinksFromBaidu(html)
     output = os.path.dirname(os.path.realpath(__file__))+"/urls.txt"
     if os.path.exists(output):
-        now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
         print "\n[+] Fetched URLs:"
+        print "[-] Output File: "+output
+
+def scanSubDomains(se,wd,pg):
+    if 'baidu' in se:
+        wd="site:"+wd
+        wd=wd.strip()
+        for x in xrange(1,pg):
+            rn=10
+            pn=(x-1)*rn
+            url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
+            html=getUrlRespHtml(url)
+            urls=getDomainsFromBaidu(html)
+    output = os.path.dirname(os.path.realpath(__file__))+"/subdomains.txt"
+    if os.path.exists(output):
+        print "\n[+] Scanned SubDomains:"
         print "[-] Output File: "+output
 
 def myhelp():
@@ -108,13 +151,14 @@ def myhelp():
     print "Options:"
     print "  -h, --help                                  Show basic help message and exit"
     print "  -b keyword, --baidu=keyword                 Fetch URLs from Baidu.com based on specific keyword"
+    print "  -d site, --domain=site                      Scan subdomains based on specific site"
     print "\nExamples:"
     print "  hackUtils.py -b inurl:www.example.com"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:",["help","baidu="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:d:",["help","baidu=","domain="])
     except getopt.GetoptError:
         sys.exit()
 
@@ -123,6 +167,8 @@ def main():
             myhelp()
         if name in ("-b","--baidu"):
             fetchUrls('baidu',value,10)
+        if name in ("-d","--domain"):
+            scanSubDomains('baidu',value,10)
 
 if __name__ == '__main__':
     main()
