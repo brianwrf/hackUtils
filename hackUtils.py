@@ -154,6 +154,7 @@ def myhelp():
     print "  -d site, --domain=site                      Scan subdomains based on specific site"
     print "\nExamples:"
     print "  hackUtils.py -b inurl:www.example.com"
+    print "  hackUtils.py -d example.com"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
