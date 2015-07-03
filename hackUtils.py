@@ -13,11 +13,13 @@ import os
 import time
 import ssl
 import getopt
+import hashlib
+import base64
 
 from bs4 import BeautifulSoup
 
 # Ignore SSL error when accessing a HTTPS website
-ssl._create_default_https_context = ssl._create_unverified_context
+# ssl._create_default_https_context = ssl._create_unverified_context
 
 reload(sys)
 sys.setdefaultencoding( "gb2312" )
@@ -84,7 +86,7 @@ def getLinksFromBaidu(html):
                 except Exception:
                     pass
 
-def getDomainsFromBaidu(html):  
+def getDomainsFromBaidu(html,wd):  
     soup = BeautifulSoup(html)
     html=soup.find('div', id="content_left")
     if html is None:
@@ -101,7 +103,8 @@ def getDomainsFromBaidu(html):
                     link=href.get('href')
                     rurl=urllib2.urlopen(link.strip()).geturl()
                     url = rurl.strip()
-                    reg='http:\/\/[^\/]+'
+                    #reg='http:\/\/[^\/]+'
+                    reg='http:\/\/[^\.]+'+'.'+wd
                     match_url = re.search(reg,url)
                     if match_url:
                         site=match_url.group(0)
@@ -128,19 +131,33 @@ def fetchUrls(se,wd,pg):
 
 def scanSubDomains(se,wd,pg):
     if 'baidu' in se:
-        wd="inurl:"+wd
-        wd=wd.strip()
+        if "www." in wd:
+            wd=wd.split("www.")[1]
+        print "[*] Scanned Site: "+wd.strip()
+        kwd="inurl:"+wd
         for x in xrange(1,pg):
             rn=10
             pn=(x-1)*rn
-            url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
+            url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+kwd.strip()+'&rn='+str(rn)+'&pn='+str(pn)
             html=getUrlRespHtml(url)
-            urls=getDomainsFromBaidu(html)
+            urls=getDomainsFromBaidu(html,wd.strip())
     output = os.path.dirname(os.path.realpath(__file__))+"/subdomains.txt"
     if os.path.exists(output):
         print "\n[+] Scanned SubDomains:"
         print "[-] Output File: "+output
 
+def encryptStr(value):
+    value=value.strip()
+    md5=hashlib.md5(value).hexdigest()
+    sha1=hashlib.sha1(value).hexdigest()
+    sha256=hashlib.sha256(value).hexdigest()
+    b64=base64.b64encode(value)
+    print "[+] Clear Text: "+value
+    print "[-] MD5: "+md5
+    print "[-] SHA1: "+sha1
+    print "[-] SHA256: "+sha256
+    print "[-] Base64: "+b64
+    
 def myhelp():
     print "\n+-----------------------------+"
     print "|  hackUtils v0.0.1           |"
@@ -149,18 +166,21 @@ def myhelp():
     print "+-----------------------------+\n"
     print "Usage: hackUtils.py [options]\n"
     print "Options:"
-    print "  -h, --help                                  Show basic help message and exit"
-    print "  -b keyword, --baidu=keyword                 Fetch URLs from Baidu.com based on specific keyword"
-    print "  -d site, --domain=site                      Scan subdomains based on specific site"
+    print "  -h, --help                                          Show basic help message and exit"
+    print "  -b keyword, --baidu=keyword                         Fetch URLs from Baidu.com based on specific keyword"
+    print "  -d site, --domain=site                              Scan subdomains based on specific site"
+    print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
     print "  hackUtils.py -b inurl:www.example.com"
     print "  hackUtils.py -d example.com"
+    print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:d:",["help","baidu=","domain="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:d:e:",["help","baidu=","domain=","encrypt="])
     except getopt.GetoptError:
+        print "\n[!] error, to see help message of options run with '-h'"
         sys.exit()
 
     for name,value in options:
@@ -169,7 +189,9 @@ def main():
         if name in ("-b","--baidu"):
             fetchUrls('baidu',value,10)
         if name in ("-d","--domain"):
-            scanSubDomains('baidu',value,10)
+            scanSubDomains('baidu',value,50)
+        if name in ("-e","--encrypt"):
+            encryptStr(value)
 
 if __name__ == '__main__':
     main()
