@@ -1,9 +1,5 @@
 # hackUtils
-It is a hack tool kit for pentest and web security research, which is based on BeautifulSoup module http://www.crummy.com/software/BeautifulSoup/bs4/. 
-
-Please firstly install bs4 module before using this script by below command:
-
-    git clone https://github.com/kelp404/bs4 bs4
+It is a hack tool kit for pentest and web security research, which is based on BeautifulSoup bs4 module http://www.crummy.com/software/BeautifulSoup/bs4/. 
 
 Usage: 
 
