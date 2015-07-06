@@ -175,15 +175,15 @@ def fetchUrls(se,wd,pg):
             print "[*] Output File: "+wooyun+"\n"
         links = open('wooyun.txt','r')
         for link in links:
-            link = link.split("//")[1]
-            if "www." in link:
-                link=link.split("www.")[1]  
-            wd="inurl:"+link.strip()+"/"+wd.strip()
+            site = link.split("//")[1]
+            if "www." in site:
+                site=site.split("www.")[1]  
+            kwd="inurl:"+site.strip()+"/"+wd.strip()
             print "\n[INFO] Scanned Site: "+wd.strip()
             for x in xrange(1,pg):
                 rn=10
                 pn=(x-1)*rn
-                url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
+                url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+kwd+'&rn='+str(rn)+'&pn='+str(pn)
                 html=getUrlRespHtml(url)
                 urls=getLinksFromBaidu(html)
         links.close()
