@@ -160,30 +160,29 @@ def fetchUrls(se,wd,pg):
             urls=getLinksFromBaidu(html)
     elif 'wooyun' in se:
         wooyun = os.path.dirname(os.path.realpath(__file__))+"/wooyun.txt"
-        if os.path.exists(wooyun):
-            links = open('wooyun.txt','r')
-            for link in links:
-                link = link.split("//")[1]
-                if "www." in link:
-                    link=link.split("www.")[1]
-                print "[INFO] Scanned Site: "+wd.strip()
-                wd="inurl:"+link+wd.strip()
-                for x in xrange(1,pg):
-                    rn=10
-                    pn=(x-1)*rn
-                    url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
-                    html=getUrlRespHtml(url)
-                    urls=getLinksFromBaidu(html)
-            links.close()
-        else:
+        if not os.path.exists(wooyun):
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [INFO] Fetching sites from Wooyun.org..."
-            for i in xrange(1,37):
+            for i in xrange(1,38):
                 url='http://www.wooyun.org/corps/page/'+str(i)
                 html=getUrlRespHtml(url)
                 getLinksFromWooyun(html)
             print "\n[INFO] Fetched Sites from Wooyun:"
-            print "[*] Output File: "+wooyun
+            print "[*] Output File: "+wooyun+"\n"
+        links = open('wooyun.txt','r')
+        for link in links:
+            link = link.split("//")[1]
+            if "www." in link:
+                link=link.split("www.")[1]
+            print "[INFO] Scanned Site: "+link.strip()
+            wd="inurl:"+link+wd.strip()
+            for x in xrange(1,pg):
+                rn=10
+                pn=(x-1)*rn
+                url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
+                html=getUrlRespHtml(url)
+                urls=getLinksFromBaidu(html)
+        links.close()
     output = os.path.dirname(os.path.realpath(__file__))+"/urls.txt"
     if os.path.exists(output):
         print "\n[INFO] Fetched URLs:"
