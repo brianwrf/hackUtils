@@ -9,6 +9,7 @@ Options:
 
     -h, --help                                  Show basic help message and exit
     -b keyword, --baidu=keyword                 Fetch URLs from Baidu.com based on specific keyword
+    -w keyword, --wooyun=keyword                Fetch URLs from Wooyun Corps based on specific keyword
     -d site, --domain=site                      Scan subdomains based on specific site
     -e string, --encrypt=string                 Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)
 
@@ -16,5 +17,6 @@ Options:
 Examples:
 
     hackUtils.py -b inurl:www.example.com
+    hackUtils.py -b .php?id=
     hackUtils.py -d example.com
     hackUtils.py -e text
