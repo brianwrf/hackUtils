@@ -143,7 +143,7 @@ def getLinksFromWooyun(html):
                 try:
                     td=doc.find_all('td')[2]
                     atag=td.find('a')
-                    link=atag.get('href').strip()+"/"
+                    link=atag.get('href').strip()
                     if not isExisted(link,'wooyun.txt'):
                         logfile(link,'wooyun.txt')
                         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
@@ -177,9 +177,9 @@ def fetchUrls(se,wd,pg):
         for link in links:
             link = link.split("//")[1]
             if "www." in link:
-                link=link.split("www.")[1]
-            print "[INFO] Scanned Site: "+link.strip()
-            wd="inurl:"+link+wd.strip()
+                link=link.split("www.")[1]  
+            wd="inurl:"+link.strip()+"/"+wd.strip()
+            print "\n[INFO] Scanned Site: "+wd.strip()
             for x in xrange(1,pg):
                 rn=10
                 pn=(x-1)*rn
