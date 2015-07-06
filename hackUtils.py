@@ -172,14 +172,14 @@ def fetchUrls(se,wd,pg):
                 html=getUrlRespHtml(url)
                 getLinksFromWooyun(html)
             print "\n[INFO] Fetched Sites from Wooyun:"
-            print "[*] Output File: "+wooyun+"\n"
+            print "[*] Output File: "+wooyun
         links = open('wooyun.txt','r')
         for link in links:
             site = link.split("//")[1]
             if "www." in site:
                 site=site.split("www.")[1]  
             kwd="inurl:"+site.strip()+"/"+wd.strip()
-            print "\n[INFO] Scanned Site: "+kwd.strip()
+            print "\n[INFO] Scanned Site: "+site.strip()+"/"+wd.strip()
             for x in xrange(1,pg):
                 rn=10
                 pn=(x-1)*rn
