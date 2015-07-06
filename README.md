@@ -17,6 +17,6 @@ Options:
 Examples:
 
     hackUtils.py -b inurl:www.example.com
-    hackUtils.py -b .php?id=
+    hackUtils.py -w .php?id=
     hackUtils.py -d example.com
     hackUtils.py -e text
