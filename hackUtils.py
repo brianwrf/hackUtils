@@ -179,7 +179,7 @@ def fetchUrls(se,wd,pg):
             if "www." in site:
                 site=site.split("www.")[1]  
             kwd="inurl:"+site.strip()+"/"+wd.strip()
-            print "\n[INFO] Scanned Site: "+wd.strip()
+            print "\n[INFO] Scanned Site: "+kwd.strip()
             for x in xrange(1,pg):
                 rn=10
                 pn=(x-1)*rn
