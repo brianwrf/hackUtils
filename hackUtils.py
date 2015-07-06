@@ -66,23 +66,26 @@ def getLinksFromBaidu(html):
     soup = BeautifulSoup(html)
     html=soup.find('div', id="content_left")
     if html is None:
-        print '[!] failed to crawl'
+        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        print "["+str(now)+"] [WARNING] failed to crawl"
     else:
         html_doc=html.find_all('h3',class_="t")
         if html_doc is None:
-            print '[!] failed to crawl'
+            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "["+str(now)+"] [WARNING] failed to crawl"
         else:
-            now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
             for doc in html_doc:
                 try:
                     href=doc.find('a')
                     link=href.get('href')
                     rurl=urllib2.urlopen(link.strip()).geturl()
                     if not isExisted(rurl,'urls.txt'):
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
                         logfile(rurl,'urls.txt')
-                        print "[+] "+rurl
+                        print "["+str(now)+"] [INFO] "+rurl
                     else:
-                        print "[!] url is duplicate ["+rurl+"]"
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                        print "["+str(now)+"] [WARNING] url is duplicate ["+rurl+"]"
                 except Exception:
                     pass
 
@@ -90,29 +93,60 @@ def getDomainsFromBaidu(html,wd):
     soup = BeautifulSoup(html)
     html=soup.find('div', id="content_left")
     if html is None:
-        print '[!] failed to crawl'
+        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        print "["+str(now)+"] [WARNING] failed to crawl"
     else:
         html_doc=html.find_all('h3',class_="t")
         if html_doc is None:
-            print '[!] failed to crawl'
+            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "["+str(now)+"] [WARNING] failed to crawl"
         else:
-            now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
             for doc in html_doc:
                 try:
                     href=doc.find('a')
                     link=href.get('href')
                     rurl=urllib2.urlopen(link.strip()).geturl()
                     url = rurl.strip()
-                    #reg='http:\/\/[^\/]+'
                     reg='http:\/\/[^\.]+'+'.'+wd
                     match_url = re.search(reg,url)
                     if match_url:
                         site=match_url.group(0)
                     if not isExisted(site,'subdomains.txt'):
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
                         logfile(site,'subdomains.txt')
-                        print "[+] "+site
+                        print "["+str(now)+"] [INFO] "+site
                     else:
-                        print "[!] url is duplicate ["+site+"]"
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                        print "["+str(now)+"] [WARNING] url is duplicate ["+site+"]"
+                except Exception:
+                    pass
+
+def getLinksFromWooyun(html):  
+    soup = BeautifulSoup(html)
+    soup = soup.find('div', class_="content")
+    soup = soup.find('table',class_="listTable")
+    html = soup.find('tbody')
+    if html is None:
+        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        print "["+str(now)+"] [WARNING] failed to crawl"
+    else:
+        html_doc=html.find_all('tr')
+        if html_doc is None:
+            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "["+str(now)+"] [WARNING] failed to crawl"
+        else:
+            for doc in html_doc:
+                try:
+                    td=doc.find_all('td')[2]
+                    atag=td.find('a')
+                    link=atag.get('href').strip()+"/"
+                    if not isExisted(link,'wooyun.txt'):
+                        logfile(link,'wooyun.txt')
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                        print "["+str(now)+"] [INFO] "+link
+                    else:
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                        print "["+str(now)+"] [WARNING] url is duplicate ["+link+"]"
                 except Exception:
                     pass
 
@@ -124,16 +158,42 @@ def fetchUrls(se,wd,pg):
             url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
             html=getUrlRespHtml(url)
             urls=getLinksFromBaidu(html)
+    elif 'wooyun' in se:
+        wooyun = os.path.dirname(os.path.realpath(__file__))+"/wooyun.txt"
+        if os.path.exists(wooyun):
+            links = open('wooyun.txt','r')
+            for link in links:
+                link = link.split("//")[1]
+                if "www." in link:
+                    link=link.split("www.")[1]
+                print "[INFO] Scanned Site: "+wd.strip()
+                wd="inurl:"+link+wd.strip()
+                for x in xrange(1,pg):
+                    rn=10
+                    pn=(x-1)*rn
+                    url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
+                    html=getUrlRespHtml(url)
+                    urls=getLinksFromBaidu(html)
+            links.close()
+        else:
+            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "["+str(now)+"] [INFO] Fetching sites from Wooyun.org..."
+            for i in xrange(1,37):
+                url='http://www.wooyun.org/corps/page/'+str(i)
+                html=getUrlRespHtml(url)
+                getLinksFromWooyun(html)
+            print "\n[INFO] Fetched Sites from Wooyun:"
+            print "[*] Output File: "+wooyun
     output = os.path.dirname(os.path.realpath(__file__))+"/urls.txt"
     if os.path.exists(output):
-        print "\n[+] Fetched URLs:"
-        print "[-] Output File: "+output
+        print "\n[INFO] Fetched URLs:"
+        print "[*] Output File: "+output
 
 def scanSubDomains(se,wd,pg):
     if 'baidu' in se:
         if "www." in wd:
             wd=wd.split("www.")[1]
-        print "[*] Scanned Site: "+wd.strip()
+        print "[INFO] Scanned Site: "+wd.strip()
         kwd="inurl:"+wd
         for x in xrange(1,pg):
             rn=10
@@ -143,8 +203,8 @@ def scanSubDomains(se,wd,pg):
             urls=getDomainsFromBaidu(html,wd.strip())
     output = os.path.dirname(os.path.realpath(__file__))+"/subdomains.txt"
     if os.path.exists(output):
-        print "\n[+] Scanned SubDomains:"
-        print "[-] Output File: "+output
+        print "\n[INFO] Scanned SubDomains:"
+        print "[*] Output File: "+output
 
 def encryptStr(value):
     value=value.strip()
@@ -152,11 +212,11 @@ def encryptStr(value):
     sha1=hashlib.sha1(value).hexdigest()
     sha256=hashlib.sha256(value).hexdigest()
     b64=base64.b64encode(value)
-    print "[+] Clear Text: "+value
-    print "[-] MD5: "+md5
-    print "[-] SHA1: "+sha1
-    print "[-] SHA256: "+sha256
-    print "[-] Base64: "+b64
+    print "[INFO] Clear Text: "+value
+    print "[*] MD5: "+md5
+    print "[*] SHA1: "+sha1
+    print "[*] SHA256: "+sha256
+    print "[*] Base64: "+b64
     
 def myhelp():
     print "\n+-----------------------------+"
@@ -168,26 +228,30 @@ def myhelp():
     print "Options:"
     print "  -h, --help                                          Show basic help message and exit"
     print "  -b keyword, --baidu=keyword                         Fetch URLs from Baidu.com based on specific keyword"
+    print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
     print "  hackUtils.py -b inurl:www.example.com"
+    print "  hackUtils.py -w .php?id="
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:d:e:",["help","baidu=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:w:d:e:",["help","baidu=","wooyun=","domain=","encrypt="])
     except getopt.GetoptError:
-        print "\n[!] error, to see help message of options run with '-h'"
+        print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
 
     for name,value in options:
         if name in ("-h","--help"):
             myhelp()
         if name in ("-b","--baidu"):
-            fetchUrls('baidu',value,10)
+            fetchUrls('baidu',value,50)
+        if name in ("-w","--wooyun"):
+            fetchUrls('wooyun',value,50)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
