@@ -7,6 +7,8 @@
 #*******************************#
 
 import urllib2
+import urllib
+import json
 import re
 import sys
 import os
@@ -15,6 +17,7 @@ import ssl
 import getopt
 import hashlib
 import base64
+import ConfigParser
 
 from bs4 import BeautifulSoup
 
@@ -66,15 +69,34 @@ def getUrlRespHtml(url):
         pass
     return respHtml
 
+def getUrlRespHtmlByProxy(url,proxy):
+    respHtml=''
+    try:
+        heads = {'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 
+                'Accept-Charset':'GB2312,utf-8;q=0.7,*;q=0.7', 
+                'Accept-Language':'zh-cn,zh;q=0.5', 
+                'Cache-Control':'max-age=0', 
+                'Connection':'keep-alive', 
+                'Keep-Alive':'115',
+                'User-Agent':'Mozilla/5.0 (X11; U; Linux x86_64; zh-CN; rv:1.9.2.14) Gecko/20110221 Ubuntu/10.10 (maverick) Firefox/3.6.14'}
+        opener = urllib2.build_opener(urllib2.ProxyHandler({'https':proxy}))
+        urllib2.install_opener(opener) 
+        req = urllib2.Request(url)
+        opener.addheaders = heads.items()
+        respHtml = opener.open(req).read()
+    except Exception:
+        pass
+    return respHtml
+
 def getLinksFromBaidu(html):  
     soup = BeautifulSoup(html)
     html=soup.find('div', id="content_left")
-    if html is None:
+    if not html:
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [WARNING] failed to crawl"
     else:
         html_doc=html.find_all('h3',class_="t")
-        if html_doc is None:
+        if not html_doc:
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [WARNING] failed to crawl"
         else:
@@ -93,15 +115,40 @@ def getLinksFromBaidu(html):
                 except Exception:
                     pass
 
+def getLinksFromGoogle(html):
+    if not html:
+        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        print "["+str(now)+"] [WARNING] failed to crawl"
+    else:
+        html_doc=json.loads(html)
+        status = html_doc["responseStatus"]
+        if str(status) == '200':
+            info = html_doc["responseData"]["results"]
+            for item in info:
+                for key in item.keys():
+                    if key == 'url':
+                        link=item[key]
+                        rurl=urllib.unquote(link.strip())
+                        if not isExisted(rurl,'urls.txt'):
+                            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                            logfile(rurl,'urls.txt')
+                            print "["+str(now)+"] [INFO] "+rurl
+                        else:
+                            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                            print "["+str(now)+"] [WARNING] url is duplicate ["+rurl+"]"
+        else:
+            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "["+str(now)+"] [WARNING] failed to crawl"
+
 def getDomainsFromBaidu(html,wd):  
     soup = BeautifulSoup(html)
     html=soup.find('div', id="content_left")
-    if html is None:
+    if not html:
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [WARNING] failed to crawl"
     else:
         html_doc=html.find_all('h3',class_="t")
-        if html_doc is None:
+        if not html_doc:
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [WARNING] failed to crawl"
         else:
@@ -130,12 +177,12 @@ def getLinksFromWooyun(html):
     soup = soup.find('div', class_="content")
     soup = soup.find('table',class_="listTable")
     html = soup.find('tbody')
-    if html is None:
+    if not html:
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [WARNING] failed to crawl"
     else:
         html_doc=html.find_all('tr')
-        if html_doc is None:
+        if not html_doc:
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [WARNING] failed to crawl"
         else:
@@ -156,17 +203,54 @@ def getLinksFromWooyun(html):
 
 def fetchUrls(se,wd,pg):
     if 'baidu' in se:
+        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        print "["+str(now)+"] [INFO] Fetching URLs from Baidu..."
         for x in xrange(1,pg):
             rn=10
             pn=(x-1)*rn
-            url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd+'&rn='+str(rn)+'&pn='+str(pn)
+            url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd.strip()+'&rn='+str(rn)+'&pn='+str(pn)
             html=getUrlRespHtml(url)
             urls=getLinksFromBaidu(html)
+    elif 'google' in se:
+        proxy=''
+        proxyini = os.path.dirname(os.path.realpath(__file__))+"/proxy.ini"
+        if not os.path.exists(proxyini):
+            print "[INFO] Please configure a proxy to access to Google..."
+            proxyserver=raw_input('[+] Enter proxy server (e.g. http://10.10.10.10:80): ')
+            user=raw_input('[+] Enter user name: ') 
+            passwd=raw_input('[+] Enter password: ')
+            config=ConfigParser.ConfigParser()
+            config.read("proxy.ini")
+            config.add_section("Proxy")
+            config.set("Proxy","user",user)
+            config.set("Proxy","passwd",passwd)
+            config.set("Proxy","proxyserver",proxyserver)
+            config.write(open("proxy.ini", "w"))
+            if not user or not passwd or not proxyserver:
+                proxy = proxyserver
+            else:
+                proxy = 'http://%s:%s@%s' % (user.strip(), passwd.strip(), proxyserver.strip())
+        else:
+            config=ConfigParser.ConfigParser()
+            config.read("proxy.ini")
+            user=config.get("Proxy","user")
+            passwd=config.get("Proxy","passwd")
+            proxyserver=config.get("Proxy","proxyserver")
+            if not user or not passwd or not proxyserver:
+                proxy = proxyserver
+            else:
+                proxy = 'http://%s:%s@%s' % (user.strip(), passwd.strip(), proxyserver.strip())
+        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        print "["+str(now)+"] [INFO] Fetching URLs from Google..."
+        for x in xrange(0,pg):
+            url='https://ajax.googleapis.com/ajax/services/search/web?v=1.0&q='+wd.strip()+'&rsz=8&start='+str(x)
+            html=getUrlRespHtmlByProxy(url,proxy)
+            urls=getLinksFromGoogle(html)
     elif 'wooyun' in se:
         wooyun = os.path.dirname(os.path.realpath(__file__))+"/wooyun.txt"
         if not os.path.exists(wooyun):
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-            print "["+str(now)+"] [INFO] Fetching sites from Wooyun.org..."
+            print "["+str(now)+"] [INFO] Fetching sites from Wooyun Corps..."
             for i in xrange(1,38):
                 url='http://www.wooyun.org/corps/page/'+str(i)
                 html=getUrlRespHtml(url)
@@ -230,12 +314,14 @@ def myhelp():
     print "Usage: hackUtils.py [options]\n"
     print "Options:"
     print "  -h, --help                                          Show basic help message and exit"
-    print "  -b keyword, --baidu=keyword                         Fetch URLs from Baidu.com based on specific keyword"
+    print "  -b keyword, --baidu=keyword                         Fetch URLs from Baidu based on specific keyword"
+    print "  -g keyword, --google=keyword                        Fetch URLs from Google based on specific keyword"
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
     print "  hackUtils.py -b inurl:www.example.com"
+    print "  hackUtils.py -g inurl:www.example.com"
     print "  hackUtils.py -w .php?id="
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
@@ -243,7 +329,7 @@ def myhelp():
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:w:d:e:",["help","baidu=","wooyun=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:d:e:",["help","baidu=","google=","wooyun=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -253,6 +339,8 @@ def main():
             myhelp()
         if name in ("-b","--baidu"):
             fetchUrls('baidu',value,50)
+        if name in ("-g","--google"):
+            fetchUrls('google',value,50)
         if name in ("-w","--wooyun"):
             fetchUrls('wooyun',value,50)
         if name in ("-d","--domain"):
