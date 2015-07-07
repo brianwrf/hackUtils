@@ -104,7 +104,7 @@ def getLinksFromBaidu(html):
                 try:
                     href=doc.find('a')
                     link=href.get('href')
-                    rurl=urllib2.urlopen(link.strip()).geturl()
+                    rurl=urllib.unquote(urllib2.urlopen(link.strip()).geturl())
                     if not isExisted(rurl,'urls.txt'):
                         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
                         logfile(rurl,'urls.txt')
@@ -156,7 +156,7 @@ def getDomainsFromBaidu(html,wd):
                 try:
                     href=doc.find('a')
                     link=href.get('href')
-                    rurl=urllib2.urlopen(link.strip()).geturl()
+                    rurl=urllib.unquote(urllib2.urlopen(link.strip()).geturl())
                     url = rurl.strip()
                     reg='http:\/\/[^\.]+'+'.'+wd
                     match_url = re.search(reg,url)
@@ -213,38 +213,38 @@ def fetchUrls(se,wd,pg):
             urls=getLinksFromBaidu(html)
     elif 'google' in se:
         proxy=''
+        user=''
+        passwd=''
+        proxyserver=''
         proxyini = os.path.dirname(os.path.realpath(__file__))+"/proxy.ini"
+        config=ConfigParser.ConfigParser()
+        config.read("proxy.ini")
         if not os.path.exists(proxyini):
             print "[INFO] Please configure a proxy to access to Google..."
-            proxyserver=raw_input('[+] Enter proxy server (e.g. http://10.10.10.10:80): ')
-            user=raw_input('[+] Enter user name: ') 
-            passwd=raw_input('[+] Enter password: ')
-            config=ConfigParser.ConfigParser()
-            config.read("proxy.ini")
+            proxyserver=raw_input('[+] Enter proxy server (e.g. 192.95.4.120:8888): ')
+            user=raw_input('[+] Enter user name [press Enter if anonymous]: ') 
+            passwd=raw_input('[+] Enter password [press Enter if anonymous]: ')
             config.add_section("Proxy")
             config.set("Proxy","user",user)
             config.set("Proxy","passwd",passwd)
             config.set("Proxy","proxyserver",proxyserver)
             config.write(open("proxy.ini", "w"))
-            if not user or not passwd or not proxyserver:
-                proxy = proxyserver
-            else:
-                proxy = 'http://%s:%s@%s' % (user.strip(), passwd.strip(), proxyserver.strip())
         else:
-            config=ConfigParser.ConfigParser()
-            config.read("proxy.ini")
             user=config.get("Proxy","user")
             passwd=config.get("Proxy","passwd")
             proxyserver=config.get("Proxy","proxyserver")
-            if not user or not passwd or not proxyserver:
-                proxy = proxyserver
-            else:
-                proxy = 'http://%s:%s@%s' % (user.strip(), passwd.strip(), proxyserver.strip())
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [INFO] Fetching URLs from Google..."
         for x in xrange(0,pg):
             url='https://ajax.googleapis.com/ajax/services/search/web?v=1.0&q='+wd.strip()+'&rsz=8&start='+str(x)
-            html=getUrlRespHtmlByProxy(url,proxy)
+            if not proxyserver:
+                html=getUrlRespHtml(url)
+            elif not user or not passwd:
+                proxy = "http://"+proxyserver.strip()
+                html=getUrlRespHtmlByProxy(url,proxy)
+            else:
+                proxy = 'http://%s:%s@%s' % (user.strip(), passwd.strip(), proxyserver.strip())
+                html=getUrlRespHtmlByProxy(url,proxy)
             urls=getLinksFromGoogle(html)
     elif 'wooyun' in se:
         wooyun = os.path.dirname(os.path.realpath(__file__))+"/wooyun.txt"
