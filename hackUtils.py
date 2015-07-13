@@ -88,7 +88,7 @@ def getUrlRespHtmlByProxy(url,proxy):
         pass
     return respHtml
 
-def getLinksFromBaidu(html):  
+def getLinksFromBaidu(html,wd):  
     soup = BeautifulSoup(html)
     html=soup.find('div', id="content_left")
     if not html:
@@ -105,17 +105,25 @@ def getLinksFromBaidu(html):
                     href=doc.find('a')
                     link=href.get('href')
                     rurl=urllib.unquote(urllib2.urlopen(link.strip()).geturl())
-                    if not isExisted(rurl,'urls.txt'):
-                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                        logfile(rurl,'urls.txt')
-                        print "["+str(now)+"] [INFO] "+rurl
+                    kd=''
+                    if "inurl:" in wd:
+                        kd=wd.strip().split("inurl:")[1]
+                    elif "site:" in wd:
+                        kd=wd.strip().split("site:")[1]
                     else:
-                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                        print "["+str(now)+"] [WARNING] url is duplicate ["+rurl+"]"
+                        kd=wd.strip()
+                    if kd in rurl:
+                        if not isExisted(rurl,'urls.txt'):
+                            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                            logfile(rurl,'urls.txt')
+                            print "["+str(now)+"] [INFO] "+rurl
+                        else:
+                            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                            print "["+str(now)+"] [WARNING] url is duplicate ["+rurl+"]"
                 except Exception:
                     pass
 
-def getLinksFromGoogle(html):
+def getLinksFromGoogle(html,wd):
     if not html:
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [WARNING] failed to crawl"
@@ -129,13 +137,21 @@ def getLinksFromGoogle(html):
                     if key == 'url':
                         link=item[key]
                         rurl=urllib.unquote(link.strip())
-                        if not isExisted(rurl,'urls.txt'):
-                            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                            logfile(rurl,'urls.txt')
-                            print "["+str(now)+"] [INFO] "+rurl
+                        kd=''
+                        if "inurl:" in wd:
+                            kd=wd.strip().split("inurl:")[1]
+                        elif "site:" in wd:
+                            kd=wd.strip().split("site:")[1]
                         else:
-                            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                            print "["+str(now)+"] [WARNING] url is duplicate ["+rurl+"]"
+                            kd=wd.strip()
+                        if kd in rurl:
+                            if not isExisted(rurl,'urls.txt'):
+                                now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                                logfile(rurl,'urls.txt')
+                                print "["+str(now)+"] [INFO] "+rurl
+                            else:
+                                now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                                print "["+str(now)+"] [WARNING] url is duplicate ["+rurl+"]"
         else:
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [WARNING] failed to crawl"
@@ -210,7 +226,7 @@ def fetchUrls(se,wd,pg):
             pn=(x-1)*rn
             url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd.strip()+'&rn='+str(rn)+'&pn='+str(pn)
             html=getUrlRespHtml(url)
-            urls=getLinksFromBaidu(html)
+            urls=getLinksFromBaidu(html,wd)
     elif 'google' in se:
         proxy=''
         user=''
@@ -245,7 +261,7 @@ def fetchUrls(se,wd,pg):
             else:
                 proxy = 'http://%s:%s@%s' % (user.strip(), passwd.strip(), proxyserver.strip())
                 html=getUrlRespHtmlByProxy(url,proxy)
-            urls=getLinksFromGoogle(html)
+            urls=getLinksFromGoogle(html,wd)
     elif 'wooyun' in se:
         wooyun = os.path.dirname(os.path.realpath(__file__))+"/wooyun.txt"
         if not os.path.exists(wooyun):
@@ -269,7 +285,7 @@ def fetchUrls(se,wd,pg):
                 pn=(x-1)*rn
                 url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+kwd+'&rn='+str(rn)+'&pn='+str(pn)
                 html=getUrlRespHtml(url)
-                urls=getLinksFromBaidu(html)
+                urls=getLinksFromBaidu(html,wd)
         links.close()
     output = os.path.dirname(os.path.realpath(__file__))+"/urls.txt"
     if os.path.exists(output):
