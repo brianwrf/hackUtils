@@ -354,16 +354,12 @@ def main():
         if name in ("-h","--help"):
             myhelp()
         if name in ("-b","--baidu"):
-            value = urllib.quote(value)
             fetchUrls('baidu',value,50)
         if name in ("-g","--google"):
-            value = urllib.quote(value)
             fetchUrls('google',value,50)
         if name in ("-w","--wooyun"):
-            value = urllib.quote(value)
             fetchUrls('wooyun',value,50)
         if name in ("-d","--domain"):
-            value = urllib.quote(value)
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
             encryptStr(value)
