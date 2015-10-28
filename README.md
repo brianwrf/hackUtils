@@ -11,6 +11,7 @@ Options:
     -b keyword, --baidu=keyword                 Fetch URLs from Baidu based on specific keyword
     -g keyword, --google=keyword                Fetch URLs from Google based on specific keyword
     -w keyword, --wooyun=keyword                Fetch URLs from Wooyun Corps based on specific keyword
+    -j url, --joomla=url                        Exploit SQLi for Joomla 3.2 - 3.4
     -d site, --domain=site                      Scan subdomains based on specific site
     -e string, --encrypt=string                 Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)
 
@@ -20,5 +21,6 @@ Examples:
     hackUtils.py -b inurl:www.example.com
     hackUtils.py -g inurl:www.example.com
     hackUtils.py -w .php?id=
+    hackUtils.py -j http://www.joomla.com/
     hackUtils.py -d example.com
     hackUtils.py -e text
