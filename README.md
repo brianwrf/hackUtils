@@ -12,6 +12,7 @@ Options:
     -g keyword, --google=keyword                Fetch URLs from Google based on specific keyword
     -w keyword, --wooyun=keyword                Fetch URLs from Wooyun Corps based on specific keyword
     -j url|file, --joomla=url|file              Exploit SQLi for Joomla 3.2 - 3.4
+    -r url|file, --rce=url|file                 Exploit Remote Command Execute for Joomla 1.4.0 - 3.4.5
     -d site, --domain=site                      Scan subdomains based on specific site
     -e string, --encrypt=string                 Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)
 
@@ -23,5 +24,7 @@ Examples:
     hackUtils.py -w .php?id=
     hackUtils.py -j http://www.joomla.com/
     hackUtils.py -j urls.txt
+    hackUtils.py -r http://www.joomla.com/
+    hackUtils.py -r urls.txt
     hackUtils.py -d example.com
     hackUtils.py -e text
