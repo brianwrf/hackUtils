@@ -28,3 +28,8 @@ Examples:
     hackUtils.py -r urls.txt
     hackUtils.py -d example.com
     hackUtils.py -e text
+
+Change Logs:
+
+****2015.12.16****
+1. Add exploit module for Joomla 1.5 - 3.4.5 - Object Injection Remote Command Execution
