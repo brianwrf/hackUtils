@@ -387,7 +387,7 @@ def getInfoByJoomlaSQLi(url, param):
 
 def rceJoomla(value):
     now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-    print "["+str(now)+"] [INFO] Checking Joomla 1.4.0 - 3.4.5 Remote Command Execute..."
+    print "["+str(now)+"] [INFO] Checking Joomla 1.5 - 3.4.5 Remote Command Execute..."
     if 'http://' in value or 'https://' in value:
     	url=value
     	checkJoomlaRCE(url)
@@ -473,7 +473,7 @@ def myhelp():
     print "  -g keyword, --google=keyword                        Fetch URLs from Google based on specific keyword"
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
-    print "  -r url|file, --rce=url|file                         Exploit Remote Command Execute for Joomla 1.4.0 - 3.4.5"
+    print "  -r url|file, --rce=url|file                         Exploit Remote Command Execute for Joomla 1.5 - 3.4.5"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
