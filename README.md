@@ -38,3 +38,5 @@ Change Logs:
 ****2015.12.16****
 
 1. Add exploit module for Joomla 1.5 - 3.4.5 - Object Injection Remote Code Execution
+
+声明：仅作学习目的，任何人不可用于非法目的，否则后果由其本人承担!
