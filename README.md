@@ -31,6 +31,11 @@ Examples:
 
 Change Logs:
 
+****2015.12.23****
+1. Update Baidu URLs fetching module
+2. Update Wooyun URLs fetching module
+3. Update Subdomains Scan module
+
 ****2015.12.17****
 
 1. Modify exploit payload for Joomla 1.5 - 3.4.5 - Object Injection Remote Code Execution
