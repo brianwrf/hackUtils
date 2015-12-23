@@ -32,17 +32,18 @@ Examples:
 Change Logs:
 
 ****2015.12.23****
-1. Update Baidu URLs fetching module
-2. Update Wooyun URLs fetching module
-3. Update Subdomains Scan module
+
+    1. Update Baidu URLs fetching module
+    2. Update Wooyun URLs fetching module
+    3. Update Subdomains Scan module
 
 ****2015.12.17****
 
-1. Modify exploit payload for Joomla 1.5 - 3.4.5 - Object Injection Remote Code Execution
+    1. Modify exploit payload for Joomla 1.5 - 3.4.5 - Object Injection Remote Code Execution
 
 ****2015.12.16****
 
-1. Add exploit module for Joomla 1.5 - 3.4.5 - Object Injection Remote Code Execution
+    1. Add exploit module for Joomla 1.5 - 3.4.5 - Object Injection Remote Code Execution
 
 [!] legal disclaimer: Usage of hackUtils for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
 
