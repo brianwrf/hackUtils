@@ -93,31 +93,53 @@ def getUrlRespHtmlByProxy(url,proxy):
         pass
     return respHtml
 
-def getLinksFromBaidu(html,wd):  
+def getLinksFromBaidu(html):  
     soup = BeautifulSoup(html)
-    html=soup.find('div', id="content_left")
+    html=soup.find('div', id="results")
     if not html:
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [WARNING] failed to crawl"
     else:
-        html_doc=html.find_all('h3',class_="t")
+        html_doc=html.find_all('div', class_="c-showurl")
         if not html_doc:
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [WARNING] failed to crawl"
         else:
             for doc in html_doc:
                 try:
-                    href=doc.find('a')
-                    link=href.get('href')
-                    rurl=urllib.unquote(urllib2.urlopen(link.strip()).geturl())
-                    kd=''
-                    if "inurl:" in wd:
-                        kd=wd.strip().split("inurl:")[1]
-                    elif "site:" in wd:
-                        kd=wd.strip().split("site:")[1]
+                    href=doc.find_all('span')[0].find_all(text=True)[0]
+                    rurl="http://"+str(href)+"/"
+                    if not isExisted(rurl,'urls.txt'):
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                        logfile(rurl,'urls.txt')
+                        print "["+str(now)+"] [INFO] "+rurl
                     else:
-                        kd=wd.strip()
-                    if kd in rurl:
+                        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+                        print "["+str(now)+"] [WARNING] url is duplicate ["+rurl+"]"
+                except Exception:
+                    pass
+
+def getUrlsFromBaidu(html):  
+    soup = BeautifulSoup(html)
+    html=soup.find('div', id="results")
+    if not html:
+        now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+        print "["+str(now)+"] [WARNING] failed to crawl"
+    else:
+        html_doc=html.find_all('div', class_="c-container")
+        if not html_doc:
+            now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+            print "["+str(now)+"] [WARNING] failed to crawl"
+        else:
+            for doc in html_doc:
+                try:
+                    href=doc.find_all('a')[0].get('href')
+                    href="http://wap.baidu.com"+str(href).strip()
+                    res=urllib.unquote(urllib2.urlopen(href).read())
+                    reg='.*<meta http-equiv="refresh" content="0; url=(.*?)" \/>.*'
+                    match_url = re.search(reg,res)
+                    if match_url:
+                        rurl=match_url.group(1)
                         if not isExisted(rurl,'urls.txt'):
                             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
                             logfile(rurl,'urls.txt')
@@ -161,28 +183,22 @@ def getLinksFromGoogle(html,wd):
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [WARNING] failed to crawl"
 
-def getDomainsFromBaidu(html,wd):  
+def getDomainsFromBaidu(html):  
     soup = BeautifulSoup(html)
-    html=soup.find('div', id="content_left")
+    html=soup.find('div', id="results")
     if not html:
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [WARNING] failed to crawl"
     else:
-        html_doc=html.find_all('h3',class_="t")
+        html_doc=html.find_all('div', class_="c-showurl")
         if not html_doc:
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [WARNING] failed to crawl"
         else:
             for doc in html_doc:
                 try:
-                    href=doc.find('a')
-                    link=href.get('href')
-                    rurl=urllib.unquote(urllib2.urlopen(link.strip()).geturl())
-                    url = rurl.strip()
-                    reg='http:\/\/[^\.]+'+'.'+wd
-                    match_url = re.search(reg,url)
-                    if match_url:
-                        site=match_url.group(0)
+                    href=doc.find_all('span')[0].find_all(text=True)[0]
+                    site="http://"+str(href)+"/"
                     if not isExisted(site,'subdomains.txt'):
                         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
                         logfile(site,'subdomains.txt')
@@ -226,12 +242,13 @@ def fetchUrls(se,wd,pg):
     if 'baidu' in se:
         now = time.strftime('%H:%M:%S',time.localtime(time.time()))
         print "["+str(now)+"] [INFO] Fetching URLs from Baidu..."
+        wd=urllib.quote(wd.strip())
         for x in xrange(1,pg):
             rn=10
             pn=(x-1)*rn
-            url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+wd.strip()+'&rn='+str(rn)+'&pn='+str(pn)
+            url='http://wap.baidu.com/s?pn='+str(pn)+'&word='+wd
             html=getUrlRespHtml(url)
-            urls=getLinksFromBaidu(html,wd)
+            urls=getLinksFromBaidu(html)
     elif 'google' in se:
         proxy=''
         user=''
@@ -272,7 +289,7 @@ def fetchUrls(se,wd,pg):
         if not os.path.exists(wooyun):
             now = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(now)+"] [INFO] Fetching sites from Wooyun Corps..."
-            for i in xrange(1,38):
+            for i in xrange(1,43):
                 url='http://www.wooyun.org/corps/page/'+str(i)
                 html=getUrlRespHtml(url)
                 getLinksFromWooyun(html)
@@ -283,14 +300,15 @@ def fetchUrls(se,wd,pg):
             site = link.split("//")[1]
             if "www." in site:
                 site=site.split("www.")[1]  
-            kwd="inurl:"+site.strip()+"/"+wd.strip()
-            print "\n[INFO] Scanned Site: "+site.strip()+"/"+wd.strip()
+            kwd=wd.strip()+" "+"site:"+site.strip()
+            kwd=urllib.quote(kwd)
+            print "\n[INFO] Scanned Site: "+site.strip()
             for x in xrange(1,pg):
                 rn=10
                 pn=(x-1)*rn
-                url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+kwd+'&rn='+str(rn)+'&pn='+str(pn)
+                url='http://wap.baidu.com/s?pn='+str(pn)+'&word='+kwd
                 html=getUrlRespHtml(url)
-                urls=getLinksFromBaidu(html,wd)
+                urls=getUrlsFromBaidu(html)
         links.close()
     output = os.path.dirname(os.path.realpath(__file__))+"/urls.txt"
     if os.path.exists(output):
@@ -302,13 +320,14 @@ def scanSubDomains(se,wd,pg):
         if "www." in wd:
             wd=wd.split("www.")[1]
         print "[INFO] Scanned Site: "+wd.strip()
-        kwd="inurl:"+wd
+        kwd="site:"+wd.strip()
+        kwd=urllib.quote(kwd)
         for x in xrange(1,pg):
             rn=10
             pn=(x-1)*rn
-            url='http://www.baidu.com/baidu?cl=3&tn=baidutop10&wd='+kwd.strip()+'&rn='+str(rn)+'&pn='+str(pn)
+            url='http://wap.baidu.com/s?pn='+str(pn)+'&word='+kwd
             html=getUrlRespHtml(url)
-            urls=getDomainsFromBaidu(html,wd.strip())
+            urls=getDomainsFromBaidu(html)
     output = os.path.dirname(os.path.realpath(__file__))+"/subdomains.txt"
     if os.path.exists(output):
         print "\n[INFO] Scanned SubDomains:"
@@ -484,7 +503,7 @@ def getShellByJoomlaRCE(url, system, script_filename):
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.2           |"
+    print "|  hackUtils v0.0.3           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
