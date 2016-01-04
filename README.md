@@ -13,7 +13,6 @@ Options:
     -w keyword, --wooyun=keyword                Fetch URLs from Wooyun Corps based on specific keyword
     -j url|file, --joomla=url|file              Exploit SQLi for Joomla 3.2 - 3.4
     -r url|file, --rce=url|file                 Exploit Remote Code Execution for Joomla 1.5 - 3.4.5
-    -f url|file, --feifeicms=url|file           Exploit Remote Code Execution for FeiFeiCMS 2.8
     -d site, --domain=site                      Scan subdomains based on specific site
     -e string, --encrypt=string                 Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)
 
@@ -27,16 +26,10 @@ Examples:
     hackUtils.py -j urls.txt
     hackUtils.py -r http://www.joomla.com/
     hackUtils.py -r urls.txt
-    hackUtils.py -f http://www.feifeicms.com/
-    hackUtils.py -f urls.txt
     hackUtils.py -d example.com
     hackUtils.py -e text
 
 Change Logs:
-
-****2016.01.04****
-
-    1. Add exploit module for FeiFeiCMS 2.8 Remote Code Execution
 
 ****2015.12.23****
 
