@@ -589,7 +589,7 @@ def myhelp():
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
     print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
-    print "  -f url|file, --feifeicms=url|file                   Exploit Remote Code Execution for FeiFeiCMS 2.8 (Password: 1)"
+    print "  -f url|file, --ffcms=url|file                       Exploit Remote Code Execution for FeiFeiCMS 2.8 (Password: 1)"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
@@ -608,7 +608,7 @@ def myhelp():
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:j:r:f:d:e:",["help","baidu=","google=","wooyun=","joomla=","rce=","feifeicms=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:w:j:r:f:d:e:",["help","baidu=","google=","wooyun=","joomla=","rce=","ffcms=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -626,7 +626,7 @@ def main():
             checkJoomla(value)
         if name in ("-r","--rce"):
             rceJoomla(value)
-        if name in ("-f","--feifeicms"):
+        if name in ("-f","--ffcms"):
             rceFeiFeiCMS(value)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
