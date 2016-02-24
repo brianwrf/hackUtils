@@ -577,8 +577,8 @@ def getShellByFeiFeiCMS(url):
 
 def fetchIPs(value,page):
     API_URL = "https://www.censys.io/api/v1"
-    UID = "3ac350c3-21f9-46be-aeb7-d18f832006f9"  //Your API UID
-    SECRET = "UBqUKkuUevh2pZqfO3fQalqNVDheGWuc"   //Your API SECRET
+    UID = "3ac350c3-21f9-46be-aeb7-d18f832006f9"  #Your API UID
+    SECRET = "UBqUKkuUevh2pZqfO3fQalqNVDheGWuc"   #Your API SECRET
     value = value.strip()
     now = time.strftime('%H:%M:%S',time.localtime(time.time()))
     print "["+str(now)+"] [INFO] Fetching IPs from Censys..."
@@ -598,7 +598,7 @@ def fetchIPs(value,page):
                 print "["+str(mynow)+"] [INFO] "+ip
         except Exception:
             mynow = time.strftime('%H:%M:%S',time.localtime(time.time()))
-            print "["+str(mynow)+"] [WARNING] nothing found!"
+            print "["+str(mynow)+"] [WARNING] nothing found, please check API UID and SECRET!"
     output = os.path.dirname(os.path.realpath(__file__))+"/censys.txt"
     if os.path.exists(output):
         print "\n[INFO] Fetched IPs:"
