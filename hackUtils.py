@@ -447,7 +447,7 @@ def get_url(url, user_agent):
     headers = {
     'User-Agent': user_agent
     }
-    cookies = requests.get(url,headers=headers).cookies
+    cookies = requests.get(url,timeout=10,headers=headers).cookies
     for _ in range(3):
         response = requests.get(url, timeout=10, headers=headers, cookies=cookies)    
     return response.content
