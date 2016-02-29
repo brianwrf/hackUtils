@@ -575,38 +575,44 @@ def getShellByFeiFeiCMS(url):
     except Exception, e:
         return "no info!"
 
-def fetchIPs(value,page):
+def fetchCensys(value,field,page):
     API_URL = "https://www.censys.io/api/v1"
     UID = "3ac350c3-21f9-46be-aeb7-d18f832006f9"  #Your API UID
     SECRET = "UBqUKkuUevh2pZqfO3fQalqNVDheGWuc"   #Your API SECRET
     value = value.strip()
+    field = field.strip()
     now = time.strftime('%H:%M:%S',time.localtime(time.time()))
-    print "["+str(now)+"] [INFO] Fetching IPs from Censys..."
+    print "["+str(now)+"] [INFO] Fetching IPs/URLs from Censys..."
     for i in range(1,page):
         data = {                                           
              "query":value, 
              "page":int(i), 
-             "fields":["ip"]
+             "fields":[field]
             }
-        res = requests.post(API_URL + "/search/ipv4", data=json.dumps(data), auth=(UID, SECRET)).text
+	if field == "ip":
+	   res = requests.post(API_URL + "/search/ipv4", data=json.dumps(data), auth=(UID, SECRET)).text
+	elif field == "domain":
+	   res = requests.post(API_URL + "/search/websites", data=json.dumps(data), auth=(UID, SECRET)).text
         try:
             results = json.loads(res)
             for result in results["results"]:
-                ip=result["ip"]
+                censys=result[field]
                 mynow = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                logfile(ip,'censys.txt')
-                print "["+str(mynow)+"] [INFO] "+ip
+		if field == "domain":
+		   censys = "http://"+censys
+                logfile(censys,'censys.txt')
+                print "["+str(mynow)+"] [INFO] "+censys
         except Exception:
             mynow = time.strftime('%H:%M:%S',time.localtime(time.time()))
             print "["+str(mynow)+"] [WARNING] nothing found, please check API UID and SECRET!"
     output = os.path.dirname(os.path.realpath(__file__))+"/censys.txt"
     if os.path.exists(output):
-        print "\n[INFO] Fetched IPs:"
+        print "\n[INFO] Fetched IPs/URLs:"
         print "[*] Output File: "+output
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.5           |"
+    print "|  hackUtils v0.0.6           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
@@ -615,7 +621,8 @@ def myhelp():
     print "  -h, --help                                          Show basic help message and exit"
     print "  -b keyword, --baidu=keyword                         Fetch URLs from Baidu based on specific keyword"
     print "  -g keyword, --google=keyword                        Fetch URLs from Google based on specific keyword"
-    print "  -c keyword, --censys=keyword                        Fetch IPs from Censys based on specific keyword"
+    print "  -i keyword, --censysip=keyword                      Fetch IPs from Censys based on specific keyword"
+    print "  -u keyword, --censysurl=keyword                     Fetch URLs from Censys based on specific keyword"
     print "  -w keyword, --wooyun=keyword                        Fetch URLs from Wooyun Corps based on specific keyword"
     print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
     print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
@@ -625,7 +632,8 @@ def myhelp():
     print "\nExamples:"
     print "  hackUtils.py -b inurl:www.example.com"
     print "  hackUtils.py -g inurl:www.example.com"
-    print "  hackUtils.py -c 1099.java-rmi"
+    print "  hackUtils.py -i 1099.java-rmi"
+    print "  hackUtils.py -u 1099.java-rmi"
     print "  hackUtils.py -w .php?id="
     print "  hackUtils.py -j http://www.joomla.com/"
     print "  hackUtils.py -j urls.txt"
@@ -639,7 +647,7 @@ def myhelp():
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:c:w:j:r:f:d:e:",["help","baidu=","google=","censys=","wooyun=","joomla=","rce=","ffcms=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:i:u:w:j:r:f:d:e:",["help","baidu=","google=","censysid=","censysurl=","wooyun=","joomla=","rce=","ffcms=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -651,8 +659,10 @@ def main():
             fetchUrls('baidu',value,50)
         if name in ("-g","--google"):
             fetchUrls('google',value,50)
-        if name in ("-c","--censys"):
-            fetchIPs(value,50)
+        if name in ("-i","--censysip"):
+            fetchCensys(value,"ip",50)
+        if name in ("-u","--censysurl"):
+            fetchCensys(value,"domain",50)
         if name in ("-w","--wooyun"):
             fetchUrls('wooyun',value,50)
         if name in ("-j","--joomla"):
