@@ -10,7 +10,8 @@ Options:
     -h, --help                                  Show basic help message and exit
     -b keyword, --baidu=keyword                 Fetch URLs from Baidu based on specific keyword
     -g keyword, --google=keyword                Fetch URLs from Google based on specific keyword
-    -c keyword, --censys=keyword                Fetch IPs from Censys based on specific keyword
+    -i keyword, --censysip=keyword                Fetch IPs from Censys based on specific keyword
+    -u keyword, --censysurl=keyword             Fetch URLs from Censys based on specific keyword
     -w keyword, --wooyun=keyword                Fetch URLs from Wooyun Corps based on specific keyword
     -j url|file, --joomla=url|file              Exploit SQLi for Joomla 3.2 - 3.4
     -r url|file, --rce=url|file                 Exploit Remote Code Execution for Joomla 1.5 - 3.4.5
@@ -23,7 +24,8 @@ Examples:
 
     hackUtils.py -b inurl:www.example.com
     hackUtils.py -g inurl:www.example.com
-    hackUtils.py -c 1099.java-rmi
+    hackUtils.py -i 1099.java-rmi
+    hackUtils.py -u 1099.java-rmi
     hackUtils.py -w .php?id=
     hackUtils.py -j http://www.joomla.com/
     hackUtils.py -j urls.txt
@@ -35,6 +37,10 @@ Examples:
     hackUtils.py -e text
 
 Change Logs:
+
+****2016.02.29****
+
+    1. Add Censys URLs fetching module
 
 ****2016.02.24****
 
