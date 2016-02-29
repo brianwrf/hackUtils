@@ -10,7 +10,7 @@ Options:
     -h, --help                                  Show basic help message and exit
     -b keyword, --baidu=keyword                 Fetch URLs from Baidu based on specific keyword
     -g keyword, --google=keyword                Fetch URLs from Google based on specific keyword
-    -i keyword, --censysip=keyword                Fetch IPs from Censys based on specific keyword
+    -i keyword, --censysip=keyword              Fetch IPs from Censys based on specific keyword
     -u keyword, --censysurl=keyword             Fetch URLs from Censys based on specific keyword
     -w keyword, --wooyun=keyword                Fetch URLs from Wooyun Corps based on specific keyword
     -j url|file, --joomla=url|file              Exploit SQLi for Joomla 3.2 - 3.4
