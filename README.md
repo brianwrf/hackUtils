@@ -16,6 +16,7 @@ Options:
     -j url|file, --joomla=url|file              Exploit SQLi for Joomla 3.2 - 3.4
     -r url|file, --rce=url|file                 Exploit Remote Code Execution for Joomla 1.5 - 3.4.5
     -f url|file, --ffcms=url|file               Exploit Remote Code Execution for FeiFeiCMS 2.8
+    -k ip|file[::cmd], --jenkins=ip|file[::cmd] Exploit Remote Code Execution for XStream (Jenkins CVE-2016-0792)
     -d site, --domain=site                      Scan subdomains based on specific site
     -e string, --encrypt=string                 Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)
 
@@ -33,10 +34,18 @@ Examples:
     hackUtils.py -r urls.txt
     hackUtils.py -f http://www.feifeicms.com/
     hackUtils.py -f urls.txt
+    hackUtils.py -k 10.10.10.10
+    hackUtils.py -k 10.10.10.10::dir
+    hackUtils.py -k ips.txt
+    hackUtils.py -k ips.txt::"touch /tmp/jenkins"
     hackUtils.py -d example.com
     hackUtils.py -e text
 
 Change Logs:
+
+****2016.03.02****
+
+    1. Add exploit module for XStream (Jenkins CVE-2016-0792) Remote Code Execution
 
 ****2016.02.29****
 
