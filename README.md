@@ -43,6 +43,10 @@ Examples:
 
 Change Logs:
 
+****2016.03.10****
+
+    1. Modify exploit payload for XStream (Jenkins CVE-2016-0792) Remote Code Execution
+
 ****2016.03.02****
 
     1. Add exploit module for XStream (Jenkins CVE-2016-0792) Remote Code Execution
