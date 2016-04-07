@@ -637,7 +637,7 @@ def checkXStreamJenkins(ip, cmdstr):
     if url:
         try:
             result = requests.get(url,timeout=10).content
-            job = getJobFromJenkins(result)
+            #job = getJobFromJenkins(result)
             ver = getJenkinsVersion(result)
             #if job:
                 #job_url = url + job + "config.xml"
