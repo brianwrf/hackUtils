@@ -43,6 +43,10 @@ Examples:
 
 Change Logs:
 
+****2016.04.26****
+
+    1. Add exploit module for Struts 2 (S2-032) Remote Code Execution
+
 ****2016.03.10****
 
     1. Modify exploit payload for XStream (Jenkins CVE-2016-0792) Remote Code Execution
