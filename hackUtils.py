@@ -823,7 +823,7 @@ def myhelp():
     print "  hackUtils.py -k 10.10.10.10::dir"
     print "  hackUtils.py -k ips.txt"
     print "  hackUtils.py -k ips.txt::\"touch /tmp/jenkins\""
-    print "  hackUtils.py -s http://www.struts2.com/index.action”
+    print "  hackUtils.py -s http://www.struts2.com/index.action"
     print "  hackUtils.py -s urls.txt"
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
