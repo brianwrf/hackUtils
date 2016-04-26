@@ -788,7 +788,7 @@ def exploitS2032(exp):
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.9           |"
+    print "|  hackUtils v0.1.0           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
