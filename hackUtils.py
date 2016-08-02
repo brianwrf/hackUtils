@@ -2,8 +2,6 @@
 
 #*******************************#
 # Description: Hack Utils       #
-# Author: avfisher#avfisher.win #
-# Email: security_alert@126.com #
 #*******************************#
 
 import urllib2
@@ -800,8 +798,6 @@ def exploitS2032(exp):
 def myhelp():
     print "\n+-----------------------------+"
     print "|  hackUtils v0.1.2           |"
-    print "|  Avfisher - avfisher.win    |"
-    print "|  security_alert@126.com     |"
     print "+-----------------------------+\n"
     print "Usage: hackUtils.py [options]\n"
     print "Options:"
