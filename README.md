@@ -17,6 +17,7 @@ Options:
     -r url|file, --rce=url|file                 Exploit Remote Code Execution for Joomla 1.5 - 3.4.5
     -f url|file, --ffcms=url|file               Exploit Remote Code Execution for FeiFeiCMS 2.8
     -k ip|file[::cmd], --jenkins=ip|file[::cmd] Exploit Remote Code Execution for XStream (Jenkins CVE-2016-0792)
+    -o url|file[::cmd], --shiro=url|file[::cmd] Exploit Remote Code Execution for Apache Shiro 1.2.4
     -s url|file, --s2032=url|file               Exploit Remote Code Execution for Struts2 (S2-032)
     -d site, --domain=site                      Scan subdomains based on specific site
     -e string, --encrypt=string                 Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)
@@ -39,12 +40,18 @@ Examples:
     hackUtils.py -k 10.10.10.10::dir
     hackUtils.py -k ips.txt
     hackUtils.py -k ips.txt::"touch /tmp/jenkins"
+    hackUtils.py -o http://www.shiro.com/::"touch /tmp/shiro"
+    hackUtils.py -o urls.txt::"touch /tmp/shiro"
     hackUtils.py -s http://www.struts2.com/index.action
     hackUtils.py -s urls.txt
     hackUtils.py -d example.com
     hackUtils.py -e text
 
 Change Logs:
+
+****2016.08.08****
+
+    1. Add exploit module for Apache Shiro 1.2.4 Remote Code Execution
 
 ****2016.04.26****
 
