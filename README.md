@@ -1,4 +1,4 @@
-# hackUtils
+# hackUtils is an amazing project
 It is a hack tool kit for pentest and web security research, which is based on BeautifulSoup bs4 module http://www.crummy.com/software/BeautifulSoup/bs4/. 
 
 Usage: 
